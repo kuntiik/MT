@@ -1,0 +1,145 @@
+{
+  "categories": [
+    {
+      "name": "decay",
+      "id": 1,
+      "supercategory": ""
+    }
+  ],
+  "images": [
+    {
+      "height": 847,
+      "date_captured": 0,
+      "coco_url": "",
+      "file_name": "1.png",
+      "flickr_url": "",
+      "license": 0,
+      "id": 0,
+      "width": 1068
+    },
+    {
+      "height": 847,
+      "date_captured": 0,
+      "coco_url": "",
+      "file_name": "10.png",
+      "flickr_url": "",
+      "license": 0,
+      "id": 1,
+      "width": 1068
+    },
+    {
+      "height": 847,
+      "date_captured": 0,
+      "coco_url": "",
+      "file_name": "100.png",
+      "flickr_url": "",
+      "license": 0,
+      "id": 2,
+      "width": 1068
+    }
+  ],
+  "annotations": [
+    {
+      "category_id": 1,
+      "bbox": [
+        424.67,
+        526.91,
+        9.63,
+        30.06
+      ],
+      "segmentation": [],
+      "image_id": 0,
+      "iscrowd": 0,
+      "area": 289.47780000000046,
+      "attributes": {
+        "occluded": false
+      },
+      "id": 0
+    },
+    {
+      "category_id": 1,
+      "bbox": [
+        129.73,
+        295.15,
+        21.49,
+        23.29
+      ],
+      "segmentation": [],
+      "image_id": 0,
+      "iscrowd": 0,
+      "area": 500.50210000000067,
+      "attributes": {
+        "occluded": false
+      },
+      "id": 1
+    },
+    {
+      "category_id": 1,
+      "bbox": [
+        281.62,
+        506.41,
+        14.32,
+        34.24
+      ],
+      "segmentation": [],
+      "image_id": 0,
+      "iscrowd": 0,
+      "area": 490.3167999999991,
+      "attributes": {
+        "occluded": false
+      },
+      "id": 2
+    },
+    {
+      "category_id": 1,
+      "bbox": [
+        295.85,
+        517.79,
+        14.32,
+        27.61
+      ],
+      "segmentation": [],
+      "image_id": 0,
+      "iscrowd": 0,
+      "area": 395.3752,
+      "attributes": {
+        "occluded": false
+      },
+      "id": 3
+    },
+    {
+      "category_id": 1,
+      "bbox": [
+        604.0,
+        543.44,
+        26.6,
+        25.86
+      ],
+      "segmentation": [],
+      "image_id": 1,
+      "iscrowd": 0,
+      "area": 687.8759999999979,
+      "attributes": {
+        "occluded": false
+      },
+      "id": 4
+    },
+    {
+      "category_id": 1,
+      "bbox": [
+        464.0,
+        315.69,
+        11.18,
+        18.49
+      ],
+      "segmentation": [],
+      "image_id": 1,
+      "iscrowd": 0,
+      "area": 206.71820000000022,
+      "attributes": {
+        "occluded": false
+      },
+      "id": 5
+    }
+  ]
+}
