@@ -330,7 +330,7 @@ class BBoxesRecordComponent(RecordComponent):
     def add_bboxes(self, bboxes: Sequence[BBox]):
         self.bboxes.extend(bboxes)
 
-    def _autofix(self) -> dict[str, list[bool]]:
+    def _autofix(self) -> Dict[str, List[bool]]:
         success = []
         for bbox in self.bboxes:
             try:
