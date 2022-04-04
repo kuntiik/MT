@@ -43,11 +43,12 @@ class TestDentalCariesParser(unittest.TestCase):
 
 
 class TestDentalCaries(unittest.TestCase):
-    data_root = Path("data/dataset")
+    # data_root = Path("data/dataset")
+    data_root = "data/dataset"
     ann_file = "annotations.json"
 
     def test_loaders(self):
-        dm = DentalCaries(self.data_root, src.lightning_modules.models.efficientdet, self.ann_file, 1, 0, train_val_test_split=[1 / 3, 1 / 3, 1 / 3])
+        dm = DentalCaries(self.data_root, 'efficientdet', self.ann_file, 1, 0, train_val_test_split=[1 / 3, 1 / 3, 1 / 3])
         dm.setup()
         train_loader = dm.train_dataloader()
         val_loader = dm.val_dataloader()

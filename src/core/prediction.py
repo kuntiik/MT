@@ -1,7 +1,9 @@
 from __future__ import annotations
+
 __all__ = ["Prediction"]
 
 from typing import Optional, TYPE_CHECKING
+import torch
 
 if TYPE_CHECKING:
     from src.core import BaseRecord
@@ -26,3 +28,15 @@ class Prediction:
             raise AttributeError
 
         return getattr(self.pred, name)
+
+    def prediction_as_dict(self):
+        predictions = dict(
+            boxes=torch.Tensor([[*bbox.xyxy] for bbox in self.pred.detection.bboxes]),
+            scores=torch.Tensor(self.pred.detection.scores),
+            labels=torch.IntTensor(self.pred.detection.label_ids)
+        )
+        ground_truths = dict(
+            boxes=torch.Tensor([[*bbox.xyxy] for bbox in self.ground_truth.detection.bboxes]),
+            labels=torch.IntTensor(self.ground_truth.detection.label_ids)
+        )
+        return predictions, ground_truths

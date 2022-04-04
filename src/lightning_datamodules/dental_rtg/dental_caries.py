@@ -70,9 +70,9 @@ class DentalCaries(pl.LightningDataModule):
     ):
         super().__init__()
         self.save_hyperparameters(ignore=["mode_type", "trasnforms"])
-        model_type = src.lightning_modules.models
-        for mod in model_type.split("."):
-            model_type = getattr(model_type, mod)
+        mod = src.lightning_modules.models
+        # for mod in model_type.split("."):
+        model_type = getattr(mod, model_type)
         self.model_type = model_type
         self.train_ds = None
         self.valid_ds = None
