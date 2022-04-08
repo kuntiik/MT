@@ -3,11 +3,11 @@ backbone : tf_d4
 img_size : 1024
 
 model :
-  _target_ : src.lightning_modules.efficientdet.EfficientDetModule
+  _target_ : src.modules.efficientdet.EfficientDetModule
   model :
-    _target_ : src.lightning_modules.models.efficientdet.model
+    _target_ : src.models.efficientdet.model
     backbone :
-      _target_ : src.lightning_modules.models.efficientdet.backbones.${backbone}
+      _target_ : src.models.efficientdet.backbones.${module.backbone}
       pretrained : 0
     num_classes : 2
     img_size : ${module.img_size}

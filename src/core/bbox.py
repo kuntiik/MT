@@ -60,11 +60,11 @@ class BBox:
         """Tries to automatically fix invalid coordinates.
 
         # Returns
-        - False if nothing was fixed (data had no problems)
-        - True if data was successfully fixed
-        - Raises `InvalidDataError` if unables to automatically fix the data
+        - False if nothing was fixed (samples had no problems)
+        - True if samples was successfully fixed
+        - Raises `InvalidDataError` if unables to automatically fix the samples
         """
-        # conditions where data can be fixed
+        # conditions where samples can be fixed
         if self.xmin < 0:
             autofix_log(
                 "AUTOFIX-SUCCESS",
@@ -97,7 +97,7 @@ class BBox:
             )
             self.ymax = min(self.ymax, img_h)
 
-        # conditions where data cannot be fixed
+        # conditions where samples cannot be fixed
         if (self.xmin >= self.xmax) or (self.ymin >= self.ymax):
             msg = []
             if self.xmin >= self.xmax:

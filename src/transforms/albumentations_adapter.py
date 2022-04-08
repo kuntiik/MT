@@ -7,6 +7,7 @@ __all__ = [
     "AlbumentationsBBoxesComponent",
 ]
 
+from abc import abstractmethod, ABC
 from dataclasses import dataclass
 from typing import Callable, List
 
@@ -14,9 +15,8 @@ import albumentations as A
 from itertools import chain
 
 import numpy as np
-from PIL.ImageTransform import Transform
 
-from src.core import BBox
+from src.core import BBox, BaseRecord
 from src.core.composite import Component, Composite
 from src.transforms.albumentations_utils import get_size_without_padding
 from src.utils import ImgSize
@@ -26,6 +26,21 @@ from src.utils import ImgSize
 class CollectOp:
     fn: Callable
     order: float = 0.5
+
+
+class Transform(ABC):
+    def __call__(self, record: BaseRecord):
+        # TODO: this assumes record is already loaded and copied
+        # which is generally true
+        return self.apply(record)
+
+    @abstractmethod
+    def apply(self, record: BaseRecord) -> BaseRecord:
+        """Apply the transform
+        Returns:
+              dict: Modified values, the keys of the dictionary should have the same
+              names as the keys received by this function
+        """
 
 
 class AlbumentationsAdapterComponent(Component):

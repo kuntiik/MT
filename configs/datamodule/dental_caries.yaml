@@ -1,0 +1,10 @@
+_target_ : src.datamodules.dental_caries.DentalCaries
+# data_root : /datagrid/personal/kuntluka/datasets/carries_dataset
+data_root : /datagrid/personal/kuntluka/dental_merged
+#data_root : /home/kuntik/carries_dataset
+image_size : ${module.img_size}
+model_type : ${module.model_type}
+ann_file : 'annotations2.json'
+batch_size : 1
+num_workers : 8
+limit_train_samples : null
