@@ -1,8 +1,42 @@
 _target_ : src.transforms.transforms_composer.TransformsComposer
 cfg :
-  image_size : 1024
-  HorizontalFlip:
-    apply : True
-    transform :
-      _target_ : albumentations.HorizontalFlip
+  image_size : ${module.img_size}
+  horizontal_flip:
+    apply: True
+    transform:
+      _target_: albumentations.HorizontalFlip
       p : 0.5
+
+  vertical_flip:
+    apply: True
+    transform:
+      _target_ : albumentations.VerticalFlip
+      p : 0.5
+
+  rotate:
+    apply: True
+    transform:
+      _target_ : albumentations.Rotate
+      limit : 10
+      p : 0.3
+
+  affine_transform:
+    apply : True
+    transform:
+      _target_ : albumentations.Affine
+      translate_percent : [-0.1, 0.1]
+      p : 0.5
+
+  gaussian_blur:
+    apply: True
+    transform:
+      _target_ : albumentations.GaussianBlur
+      blur_limit : [7, 31]
+      p : 0.3
+
+  random_gamma:
+    apply : True
+    transform:
+      _target_ : albumentations.RandomGamma
+      gamma_limit : [60, 140]
+      p : 0.3

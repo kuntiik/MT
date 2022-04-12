@@ -1,3 +1,4 @@
+import hydra
 import numpy as np
 from albumentations import PadIfNeeded, Normalize, LongestMaxSize, HorizontalFlip
 
@@ -31,10 +32,14 @@ def test_resize():
         )
     )
     record.set_record_id(1)
-    record.set_img(img)
+    record.set_img(img, original_img_size=True)
 
     composer = TransformsComposer(cfg)
     train_tfms, val_tfms = composer.train_val_transforms()
     out_img = train_tfms(record)
     assert out_img.img_size == target_img_size
     assert out_img.original_img_size == original_img_size
+
+
+def test_instantiation(cfg):
+    hydra.utils.instantiate(cfg.transforms, _recursive_=False)

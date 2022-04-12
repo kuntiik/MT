@@ -14,7 +14,7 @@ class TransformsComposer:
                 continue
             if tfms_conf.apply:
                 transforms.append(hydra.utils.instantiate(tfms_conf.transform))
-        self.train_transforms = Adapter([*self._default_transforms(image_size), *transforms])
+        self.train_transforms = Adapter([*transforms, *self._default_transforms(image_size)])
         self.val_transforms = Adapter([*self._default_transforms(image_size)])
 
     def train_val_transforms(self):

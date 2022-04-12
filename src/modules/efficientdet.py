@@ -2,12 +2,15 @@ import pytorch_lightning as pl
 import torch.nn as nn
 from torchmetrics import MaxMetric
 import torch
-from torchmetrics.detection import MeanAveragePrecision
+# from torchmetrics.detection import MeanAveragePrecision
+# from mytorchmetrics.detection import MeanAveragePrecision
+# from torchmetrics.detection.map import MAP
 
 import src.models.efficientdet as efficientdet
 from torch.optim import Adam, SGD
 
 from src.core.convertions import preds2dicts
+from src.metrics.coco_metric import COCOMetric, COCOMetricType
 
 
 class EfficientDetModule(pl.LightningModule):
@@ -21,10 +24,13 @@ class EfficientDetModule(pl.LightningModule):
             weight_decay=1e-6,
     ):
         super().__init__()
-        self.save_hyperparameters(ignore=["model"])
+        self.save_hyperparameters()
         self.model = model
         self.max_map50 = MaxMetric()
-        self.mAP = MeanAveragePrecision()
+        # self.map = MeanAveragePrecision()
+        self.map = COCOMetric(metric_type=COCOMetricType.bbox)
+        self.metrics_keys_to_log_to_prog_bar = [("AP (IoU=0.50) area=all", "val/Pascal_VOC")]
+        # self.mAP = torchmetrics.detection.map()
 
     def forward(self, *args, **kwargs):
         return self.model(*args, **kwargs)
@@ -45,8 +51,9 @@ class EfficientDetModule(pl.LightningModule):
                 (xb, yb), raw_preds["detections"], records, detection_threshold=0.0
             )
             loss = efficientdet.loss_fn(raw_preds, yb)
-            preds_torch, targets_torch = preds2dicts(preds)
-            self.mAP(preds_torch, targets_torch)
+            # preds_torch, targets_torch = preds2dicts(preds, self.device)
+            # self.map(preds_torch, targets_torch)
+            self.map.accumulate(preds)
 
         for k, v in raw_preds.items():
             if "loss" in k:
@@ -79,12 +86,15 @@ class EfficientDetModule(pl.LightningModule):
         return preds
 
     def validation_epoch_end(self, outs):
-        mAP_dict = self.mAP.compute()
-        self.log_dict(mAP_dict)
+        # self.log_dict(self.map)
+        # result = self.map.compute()
+        # self.log_dict("val/", result)
+        # self.map.reset()
+        # self.map.finalize()
         self.finalize_metrics()
-
-    def on_epoch_end(self):
-        self.mAP.reset()
+    #
+    # def on_epoch_end(self):
+    #     self.mAP.reset()
 
     def configure_optimizers(self):
         if self.hparams.optimizer == "adam":
@@ -110,3 +120,15 @@ class EfficientDetModule(pl.LightningModule):
             "name": "lr",
         }
         return [optimizer], [scheduler]
+
+    def finalize_metrics(self) -> None:
+        metric_logs = self.map.finalize()
+        for k, v in metric_logs.items():
+            for entry in self.metrics_keys_to_log_to_prog_bar:
+                if entry[0] == k:
+                    self.log(entry[1], v, prog_bar=True)
+                    self.max_map50(v)
+                    # self.log(f"{self.map.name}/{k}", v)
+                    self.log("val/best_mAP_50", self.max_map50.compute())
+                else:
+                    self.log(f"val/{k}", v)

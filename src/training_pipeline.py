@@ -15,12 +15,15 @@ import pytorch_lightning as pl
 from pytorch_lightning.plugins import DDPPlugin
 
 from loguru import logger as log
+from pytorch_lightning.strategies import DDPStrategy
 
+from src.datamodules.dental_caries import DentalCaries
+from src.transforms import TransformsComposer
 from src.utils.logger_utils import log_hyperparameters, finish
 
+import logging
 
 def train(config: DictConfig):
-
     if config.get("seed"):
         seed_everything(config.seed, workers=True)
 
@@ -45,7 +48,9 @@ def train(config: DictConfig):
                 log.info(f"Instantiating logger <{lg_conf._target_}>")
                 logger.append(hydra.utils.instantiate(lg_conf))
 
-    log.info(f"Instantiating model <{config.module._target_}>")
+    log.info(f"Instantiating model <{config.module.model._target_}>")
+
+    logging.getLogger('yolov5.models.yolo').disabled = True
     model: LightningModule = hydra.utils.instantiate(config.module.model)
 
     if config.module.get("pretrained"):
@@ -54,13 +59,14 @@ def train(config: DictConfig):
             pretrained_model = torch.load(pretrained_path)
             model.load_state_dict(pretrained_model["state_dict"])
 
-    dm: LightningDataModule = hydra.utils.instantiate(config.datamodule, transforms=t)
+    transforms_composer : TransformsComposer = hydra.utils.instantiate(config.transforms, _recursive_=False)
+    train_transforms, val_transforms = transforms_composer.train_val_transforms()
+    dm: DentalCaries = hydra.utils.instantiate(config.datamodule, train_transforms=train_transforms, val_transforms=val_transforms)
     trainer: Trainer = hydra.utils.instantiate(
         config.trainer,
         logger=logger,
         callbacks=callbacks,
-        # strategy="ddp"
-        # plugins=[DDPPlugin(find_unused_parameters=False)],
+        strategy=DDPStrategy(find_unused_parameters=False),
     )
 
     log_hyperparameters(
@@ -72,13 +78,10 @@ def train(config: DictConfig):
         logger=logger,
     )
 
-    trainer.tune(model=model, datamodule=dm)
     log.info("Starting training")
-    # trainer.fit(model=model, datamodule=dm)
-
     trainer.fit(model=model, datamodule=dm)
 
-    finish(config, model, dm, trainer, callbacks, logger)
+    # finish(config, model, dm, trainer, callbacks, logger)
     # optimized_metric = config.get("optimized_metric")
     # if optimized_metric and optimized_metric not in trainer.callback_metrics:
     #     raise Exception(

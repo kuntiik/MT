@@ -1,19 +1,19 @@
+# @package _global_
 defaults:
   - _self_
   - trainer: default.yaml
   - module : efficientdet.yaml
   - datamodule : dental_caries.yaml
-#  - logger : wandb.yaml
-  - logger : null
+  - logger : wandb.yaml
   - callbacks : default.yaml
   - transforms : default.yaml
   - experiment : null
 
   - hparams_search: null
+  - override hydra/job_logging: colorlog
+  - override hydra/hydra_logging: colorlog
 
   # - logger: wandb # set logger here or use command line (e.g. `python run.py logger=wandb`)
-#  - override hydra/hydra_logging: colorlog
-#  - override hydra/job_logging: colorlog
 
 seed : 42
 name : null

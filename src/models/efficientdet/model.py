@@ -33,9 +33,14 @@ def model(
     # Returns
         A PyTorch model.
     """
+    # check if img size is a tuple if it is swap it from width, height to height width
+    if isinstance(img_size, int):
+        img_size = (img_size, img_size)
+    width, height = img_size
+    img_size = (height, width)
     model_name = backbone.model_name
     config = get_efficientdet_config(model_name=model_name)
-    config.image_size = (img_size, img_size) if isinstance(img_size, int) else img_size
+    config.image_size = img_size
 
     model_bench = create_model_from_config(
         config,
@@ -63,6 +68,7 @@ def model(
     model_bench.param_groups = MethodType(param_groups_fn, model_bench)
 
     return model_bench
+
 
 def loss_fn(preds, targets) -> torch.Tensor:
     return preds["loss"]

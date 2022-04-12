@@ -1,25 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData" autoUpload="Always" serverName="kuntluka@boruvka.felk.cvut.cz:22 agent">
+  <component name="PublishConfigData" autoUpload="Always" serverName="kuntluka@boruvka.felk.cvut.cz">
     <serverData>
-      <paths name="kuntluka@boruvka.felk.cvut.cz:22">
+      <paths name="kuntluka@boruvka.felk.cvut.cz">
         <serverdata>
           <mappings>
-            <mapping deploy="/MT" local="$PROJECT_DIR$" web="/" />
+            <mapping deploy="/home.stud/kuntluka/MT" local="$PROJECT_DIR$" />
           </mappings>
         </serverdata>
       </paths>
-      <paths name="kuntluka@boruvka.felk.cvut.cz:22 agent">
+      <paths name="kuntluka@boruvka.felk.cvut.cz (2)">
         <serverdata>
           <mappings>
-            <mapping deploy="MT" local="$PROJECT_DIR$" />
-          </mappings>
-        </serverdata>
-      </paths>
-      <paths name="kuntluka@boruvka.felk.cvut.cz:22 agent (1)">
-        <serverdata>
-          <mappings>
-            <mapping deploy="MT" local="$PROJECT_DIR$" />
+            <mapping deploy="MT" local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>

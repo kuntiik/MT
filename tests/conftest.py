@@ -9,15 +9,24 @@ import src.transforms.albumentations_adapter
 from src.core import ClassMap
 from src.data.dataset import Dataset
 from src.data.parsers.pasacal_voc import VOCBBoxParser
-from src.data.random_splitter import RandomSplitter
+from src.data.random_splitter import RandomSplitter, SingleSplitSplitter
 from src.datamodules.dental_caries import DentalCaries
 from src.core.record_components import *
+from src.datamodules.dental_caries.dental_caries import DentalCariesParser
 
 
 @pytest.fixture()
 def cfg():
     with hydra.initialize(config_path='../configs'):
-        cfg = hydra.compose(config_name='train.yaml')
+        cfg = hydra.compose(config_name='train.yaml', overrides=['datamodule.num_workers=0'])
+    return cfg
+
+
+@pytest.fixture()
+def cfg_rectangle():
+    with hydra.initialize(config_path='../configs'):
+        cfg = hydra.compose(config_name='train.yaml',
+                            overrides=['datamodule.num_workers=0', 'module.img_size=[512, 256]'])
     return cfg
 
 
@@ -32,9 +41,27 @@ def dataset():
     # val_loader = dm.val_dataloader()
 
 
+@pytest.fixture()
+def mini_caries_parser(samples_source):
+    ann_file = "annotations.json"
+    data_root = samples_source / 'dataset'
+    yield DentalCariesParser(data_root, ann_file)
+
+
+@pytest.fixture()
+def mini_caries_records(mini_caries_parser):
+    records = mini_caries_parser.parse(SingleSplitSplitter())[0]
+    yield records
+
+
 @pytest.fixture(scope="session")
 def samples_source():
     return Path(__file__).absolute().parent.parent / "samples"
+
+
+@pytest.fixture(scope="session")
+def config_source():
+    return Path(__file__).absolute().parent.parent / "configs"
 
 
 @pytest.fixture(scope="session")
@@ -46,10 +73,11 @@ def fridge_class_map():
 @pytest.fixture(scope="module")
 def fridge_ds(samples_source, fridge_class_map) -> Tuple[Dataset, Dataset]:
     IMG_SIZE = 384
+    from albumentations.pytorch.transforms import ToTensorV2
 
     parser = VOCBBoxParser(
-        annotations_dir=samples_source / "fridge/odFridgeObjects/annotations",
-        images_dir=samples_source / "fridge/odFridgeObjects/images",
+        annotations_dir=samples_source / "fridge/annotations",
+        images_dir=samples_source / "fridge/images",
         class_map=fridge_class_map,
     )
 

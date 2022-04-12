@@ -7,12 +7,12 @@ from pytorch_lightning.utilities import rank_zero_only
 
 @rank_zero_only
 def log_hyperparameters(
-    config: DictConfig,
-    model: pl.LightningModule,
-    datamodule: pl.LightningDataModule,
-    trainer: pl.Trainer,
-    callbacks: List[pl.Callback],
-    logger: List[pl.loggers.LightningLoggerBase],
+        config: DictConfig,
+        model: pl.LightningModule,
+        datamodule: pl.LightningDataModule,
+        trainer: pl.Trainer,
+        callbacks: List[pl.Callback],
+        logger: List[pl.loggers.LightningLoggerBase],
 ) -> None:
     """Controls which config parts are saved by Lightning loggers.
     Additionaly saves:
@@ -22,7 +22,7 @@ def log_hyperparameters(
     hparams = {}
 
     # choose which parts of hydra config will be saved to loggers
-    hparams["model"] = config["model"]
+    hparams["model"] = config["module"]
 
     # save number of model parameters
     hparams["model/params/total"] = sum(p.numel() for p in model.parameters())
@@ -42,16 +42,17 @@ def log_hyperparameters(
         hparams["callbacks"] = config["callbacks"]
 
     # send hparams to all loggers
-    trainer.logger.log_hyperparams(hparams)
+    if trainer.logger is not None:
+        trainer.logger.log_hyperparams(hparams)
 
 
 def finish(
-    config: DictConfig,
-    model: pl.LightningModule,
-    datamodule: pl.LightningDataModule,
-    trainer: pl.Trainer,
-    callbacks: List[pl.Callback],
-    logger: List[pl.loggers.LightningLoggerBase],
+        config: DictConfig,
+        model: pl.LightningModule,
+        datamodule: pl.LightningDataModule,
+        trainer: pl.Trainer,
+        callbacks: List[pl.Callback],
+        logger: List[pl.loggers.LightningLoggerBase],
 ) -> None:
     """Makes sure everything closed properly."""
 

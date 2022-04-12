@@ -108,7 +108,7 @@ class ImageRecordComponent(RecordComponent):
         super().__init__(task=task)
         self.img = None
 
-    def set_img(self, img: Union[PIL.Image.Image, np.ndarray]):
+    def set_img(self, img: Union[PIL.Image.Image, np.ndarray], original_img_size=False):
         assert isinstance(img, (PIL.Image.Image, np.ndarray))
         self.img = img
         if isinstance(img, PIL.Image.Image):
@@ -117,7 +117,7 @@ class ImageRecordComponent(RecordComponent):
             # else:
             height, width, _ = self.img.shape
         # this should set on SizeRecordComponent
-        self.composite.set_img_size(ImgSize(width=width, height=height), original=True)
+        self.composite.set_img_size(ImgSize(width=width, height=height), original=original_img_size)
 
     def _repr(self) -> List[str]:
         if self.img is not None:

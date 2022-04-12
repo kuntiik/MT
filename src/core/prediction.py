@@ -29,14 +29,14 @@ class Prediction:
 
         return getattr(self.pred, name)
 
-    def prediction_as_dict(self):
+    def prediction_as_dict(self, device='cpu'):
         predictions = dict(
-            boxes=torch.Tensor([[*bbox.xyxy] for bbox in self.pred.detection.bboxes]),
-            scores=torch.Tensor(self.pred.detection.scores),
-            labels=torch.IntTensor(self.pred.detection.label_ids)
+            boxes=torch.tensor([[*bbox.xyxy] for bbox in self.pred.detection.bboxes], device=device),
+            scores=torch.tensor(self.pred.detection.scores, device=device),
+            labels=torch.tensor(self.pred.detection.label_ids, device=device, dtype=torch.int)
         )
         ground_truths = dict(
-            boxes=torch.Tensor([[*bbox.xyxy] for bbox in self.ground_truth.detection.bboxes]),
-            labels=torch.IntTensor(self.ground_truth.detection.label_ids)
+            boxes=torch.tensor([[*bbox.xyxy] for bbox in self.ground_truth.detection.bboxes], device=device),
+            labels=torch.tensor(self.ground_truth.detection.label_ids, device=device, dtype=torch.int)
         )
         return predictions, ground_truths
