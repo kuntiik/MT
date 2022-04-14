@@ -66,15 +66,16 @@ class MMDetModelAdapter(pl.LightningModule):
             lr=self.hparams.learning_rate,
             weight_decay=self.hparams.weight_decay,
         )
-        scheduler = {
-            "scheduler": torch.optim.lr_scheduler.ReduceLROnPlateau(
-                optimizer=optimizer,
-            ),
-            "monitor": "val/loss",
-            "interval": "epoch",
-            "name": "lr",
-        }
-        return [optimizer], [scheduler]
+        # scheduler = {
+        #     "scheduler": torch.optim.lr_scheduler.ReduceLROnPlateau(
+        #         optimizer=optimizer,
+        #     ),
+        #     "monitor": "val/loss",
+        #     "interval": "epoch",
+        #     "name": "lr",
+        # }
+        # return [optimizer], [scheduler]
+        return optimizer
 
     def validation_epoch_end(self, outs):
         self.finalize_metrics()

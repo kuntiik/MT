@@ -4,6 +4,7 @@
     <list>
       <list>
         <remote-mappings server-id="python@sftp://kuntluka@boruvka.felk.cvut.cz:22/home.stud/kuntluka/.conda/envs/detection/bin/python" />
+        <remote-mappings server-id="python@sftp://kuntluka@boruvka.felk.cvut.cz:22/home.stud/kuntluka/.conda/envs/det/bin/python" />
       </list>
     </list>
   </component>

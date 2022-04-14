@@ -53,7 +53,7 @@ class VOCBBoxParser(Parser):
     def parse_fields(self, o, record, is_new):
         if is_new:
             record.set_filepath(self.filepath(o))
-            record.set_img_size(self.img_size(o))
+            record.set_img_size(self.img_size(o), original=True)
 
         record.detection.set_class_map(self.class_map)
         record.detection.add_labels(self.labels(o))

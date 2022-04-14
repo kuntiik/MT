@@ -17,6 +17,7 @@ from src.core import RecordType
 from src.data import transform_dl
 import src.models.mmdet.common
 from src.models.mmdet.common.utils import convert_background_from_zero_to_last
+from torchvision.transforms.functional import to_tensor
 
 
 def train_dl(dataset, batch_tfms=None, **dataloader_kwargs) -> DataLoader:
@@ -102,7 +103,7 @@ def _img_tensor(record):
     img = record.img[:, :, ::-1].copy()
     #TODO check it
     # return (torch.from_numpy(img).permute([2,0,1]))
-    return (img)
+    return to_tensor(img)
 
 
 def _img_meta(record):
