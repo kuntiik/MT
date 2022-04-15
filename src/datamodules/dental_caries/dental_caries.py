@@ -74,11 +74,11 @@ class DentalCaries(pl.LightningDataModule):
         **kwargs
     ):
         super().__init__()
-        self.save_hyperparameters(ignore=["mode_type", "transforms"])
+        self.save_hyperparameters(ignore=["model_type", "transforms"])
         mod = src.models
-        # for mod in model_type.split("."):
-        model_type = getattr(mod, model_type)
-        self.model_type = model_type
+        for module in model_type.split("."):
+            mod = getattr(mod, module)
+        self.model_type = mod
         self.train_ds = None
         self.valid_ds = None
         self.test_ds = None
@@ -119,10 +119,17 @@ class DentalCaries(pl.LightningDataModule):
             shuffle=False,
         )
 
-    def predict_dataloader(self, stage="val"):
-        if stage == "val":
-            return self.val_dataloader()
-        elif stage == "train":
-            return self.train_dataloader()
+    def predict_dataloader(self, stage="test"):
+        if stage == "test":
+            ds = self.test_ds
+        elif stage == "val":
+            ds = self.valid_ds
+        # elif stage ==  'train':
         else:
-            return self.test_dataloader()
+            ds = self.train_ds
+        return self.model_type.infer_dl(
+            ds,
+            batch_size=1,
+            num_workers=self.hparams.num_workers,
+            shuffle=False
+        )

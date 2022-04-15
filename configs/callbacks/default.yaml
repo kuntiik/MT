@@ -3,14 +3,15 @@ rich_progress_bar:
 
 model_checkpoint:
   _target_: pytorch_lightning.callbacks.ModelCheckpoint
-  monitor: "val/loss"
+  monitor: "val/map_50"
   mode: "max" # "max" means higher metric value is better, can be also "min"
   save_top_k: 1
   save_last: True
   verbose: False
   dirpath: "checkpoints/"
-  filename: "epoch_{epoch:03d}"
+  filename: "epoch_{epoch:03d}_{val/COCOMetric/map_50:.3f}"
   auto_insert_metric_name: False
+  save_weights_only : True
 
 learning_rate_monitor:
   _target_: pytorch_lightning.callbacks.LearningRateMonitor
@@ -19,7 +20,7 @@ learning_rate_monitor:
 early_stopping:
   _target_: pytorch_lightning.callbacks.EarlyStopping
   #monitor: "valid/loss" # name of the logged metric which determines when model is improving
-  monitor: "val/loss" # name of the logged metric which determines when model is improving
-  mode: "min" # "max" means higher metric value is better, can be also "min"
+  monitor: "val/map_50" # name of the logged metric which determines when model is improving
+  mode: "max" # "max" means higher metric value is better, can be also "min"
   patience: 10 # how many validation epochs of not improving until training stops
-  min_delta: 0.001 # minimum change in the monitored metric needed to qualify as an improvement
+  min_delta: 0.005 # minimum change in the monitored metric needed to qualify as an improvement

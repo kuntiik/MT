@@ -1,6 +1,6 @@
-model_type : mmdet.faster_
+model_type : mmdet.faster_rcnn
 backbone : resnet50_fpn_1x
-img_size : [1024, 768]
+img_size : [1024,768]
 
 model:
   _target_ : src.modules.mmdet_adapter.MMDetModelAdapter

@@ -51,6 +51,7 @@ def train(config: DictConfig):
     log.info(f"Instantiating model <{config.module.model._target_}>")
 
     logging.getLogger('yolov5.models.yolo').disabled = True
+    logging.getLogger('mmcv').disabled = True
     model: LightningModule = hydra.utils.instantiate(config.module.model)
 
     if config.module.get("pretrained"):

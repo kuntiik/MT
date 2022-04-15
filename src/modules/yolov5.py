@@ -23,7 +23,7 @@ class YoloV5Module(pl.LightningModule):
 
         self.max_map50 = MaxMetric()
         self.map = COCOMetric(metric_type=COCOMetricType.bbox)
-        self.metrics_keys_to_log_to_prog_bar = [("AP (IoU=0.50) area=all", "val/Pascal_VOC")]
+        self.metrics_keys_to_log_to_prog_bar = [("map_50", "val/map_50")]
 
     def forward(self, *args, **kwargs):
         return self.model(*args, **kwargs)
@@ -38,28 +38,35 @@ class YoloV5Module(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         (xb, yb), records = batch
 
-        with torch.no_grad():
-            inference_out, training_out = self(xb)
-            preds = yolov5.convert_raw_predictions(
-                batch=xb,
-                raw_preds=inference_out,
-                records=records,
-                detection_threshold=0.001,
-                nms_iou_threshold=0.6,
-            )
-            loss = self.compute_loss(training_out, yb)[0]
-            preds_torch, targets_torch = preds2dicts(preds, self.device)
-            # self.map.update(preds_torch, targets_torch)
-            self.map.accumulate(preds)
+        inference_out, training_out = self(xb)
+        preds = yolov5.convert_raw_predictions(
+            batch=xb,
+            raw_preds=inference_out,
+            records=records,
+            detection_threshold=0.001,
+            nms_iou_threshold=0.6,
+        )
+        loss = self.compute_loss(training_out, yb)[0]
+        preds_torch, targets_torch = preds2dicts(preds, self.device)
+        # self.map.update(preds_torch, targets_torch)
+        self.map.accumulate(preds)
         self.log('val/loss', loss)
 
     def validation_epoch_end(self, outs):
-        # map_dict = self.map.compute()
-        # self.log_dict(map_dict)
         self.finalize_metrics()
 
-    # def on_epoch_end(self):
-    #     self.map.reset()
+    def predict_step(self, batch, batch_idx):
+        xb, records = batch
+        raw_preds = self(xb)[0]
+        return yolov5.convert_raw_predictions(
+            batch=xb,
+            raw_preds=raw_preds,
+            detection_threshold=0,
+            num_iou_threshold = 1,
+            keep_images=False
+        )
+
+
 
     def configure_optimizers(self):
         optimizer = Adam(
@@ -78,6 +85,7 @@ class YoloV5Module(pl.LightningModule):
         }
         return [optimizer], [scheduler]
 
+
     def finalize_metrics(self) -> None:
         metric_logs = self.map.finalize()
         for k, v in metric_logs.items():
@@ -85,7 +93,7 @@ class YoloV5Module(pl.LightningModule):
                 if entry[0] == k:
                     self.log(entry[1], v, prog_bar=True)
                     self.max_map50(v)
-                    self.log(f"{self.map.name}/{k}", v)
-                    self.log("val/best_mAP_50", self.max_map50.compute())
+                    # self.log(f"{self.map.name}/{k}", v)
+                    self.log("max_map_50", self.max_map50.compute())
                 else:
-                    self.log(f"val/{self.map.name}/{k}", v)
+                    self.log(f"val/{k}", v)

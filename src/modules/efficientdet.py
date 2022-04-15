@@ -29,7 +29,7 @@ class EfficientDetModule(pl.LightningModule):
         self.max_map50 = MaxMetric()
         # self.map = MeanAveragePrecision()
         self.map = COCOMetric(metric_type=COCOMetricType.bbox)
-        self.metrics_keys_to_log_to_prog_bar = [("AP (IoU=0.50) area=all", "val/Pascal_VOC")]
+        self.metrics_keys_to_log_to_prog_bar = [("map_50", "val/map_50")]
         # self.mAP = torchmetrics.detection.map()
 
     def forward(self, *args, **kwargs):
@@ -129,6 +129,6 @@ class EfficientDetModule(pl.LightningModule):
                     self.log(entry[1], v, prog_bar=True)
                     self.max_map50(v)
                     # self.log(f"{self.map.name}/{k}", v)
-                    self.log("val/best_mAP_50", self.max_map50.compute())
+                    self.log("max_map_50", self.max_map50.compute())
                 else:
                     self.log(f"val/{k}", v)
