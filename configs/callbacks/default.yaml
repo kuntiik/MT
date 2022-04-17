@@ -9,7 +9,7 @@ model_checkpoint:
   save_last: True
   verbose: False
   dirpath: "checkpoints/"
-  filename: "epoch_{epoch:03d}_{val/COCOMetric/map_50:.3f}"
+  filename: "epoch_{epoch:03d}_{val/map_50:.3f}"
   auto_insert_metric_name: False
   save_weights_only : True
 

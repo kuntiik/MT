@@ -1,5 +1,6 @@
 __all__ = ["YoloV5Module"]
 
+import pytorch_lightning.callbacks
 import torch
 from torch.optim import Adam
 from torchmetrics import MaxMetric
@@ -12,11 +13,12 @@ import src.models.yolov5 as yolov5
 from src.core.convertions import preds2dicts
 from src.metrics.coco_metric import COCOMetric, COCOMetricType
 
+pytorch_lightning.callbacks.ModelCheckpoint
 
 class YoloV5Module(pl.LightningModule):
     def __init__(self, model: nn.Module, learning_rate, weight_decay):
         super().__init__()
-        self.save_hyperparameters()
+        self.save_hyperparameters(ignore=['model'])
         self.model = model
         # self.map = MeanAveragePrecision()
         self.compute_loss = ComputeLoss(model)

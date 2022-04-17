@@ -24,7 +24,7 @@ class EfficientDetModule(pl.LightningModule):
             weight_decay=1e-6,
     ):
         super().__init__()
-        self.save_hyperparameters()
+        self.save_hyperparameters(ignore=['model'])
         self.model = model
         self.max_map50 = MaxMetric()
         # self.map = MeanAveragePrecision()
