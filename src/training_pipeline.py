@@ -23,6 +23,7 @@ from src.utils.logger_utils import log_hyperparameters, finish
 
 import logging
 
+
 def train(config: DictConfig):
     if config.get("seed"):
         seed_everything(config.seed, workers=True)
@@ -56,13 +57,14 @@ def train(config: DictConfig):
 
     if config.module.get("pretrained"):
         if config.module.pretrained and not os.path.isabs(config.module.pretrained):
-            pretrained_path = os.path.join(hydra.utils.get_original_cwd(), config.module.petrained)
+            pretrained_path = os.path.join(hydra.utils.get_original_cwd(), config.module.pretrained)
             pretrained_model = torch.load(pretrained_path)
             model.load_state_dict(pretrained_model["state_dict"])
 
-    transforms_composer : TransformsComposer = hydra.utils.instantiate(config.transforms, _recursive_=False)
+    transforms_composer: TransformsComposer = hydra.utils.instantiate(config.transforms, _recursive_=False)
     train_transforms, val_transforms = transforms_composer.train_val_transforms()
-    dm: DentalCaries = hydra.utils.instantiate(config.datamodule, train_transforms=train_transforms, val_transforms=val_transforms)
+    dm: DentalCaries = hydra.utils.instantiate(config.datamodule, train_transforms=train_transforms,
+                                               val_transforms=val_transforms)
     trainer: Trainer = hydra.utils.instantiate(
         config.trainer,
         logger=logger,
@@ -79,15 +81,12 @@ def train(config: DictConfig):
         logger=logger,
     )
 
-    log.info("Starting training")
-    trainer.fit(model=model, datamodule=dm)
+    if config.get('train'):
+        log.info("Starting training")
+        trainer.fit(model=model, datamodule=dm)
+    if config.get('test'):
+        ckpt_path = "best"
+        log.info("Starting testing")
+        trainer.test(model=model, datamodule=dm, ckpt_path=ckpt_path)
 
-    # finish(config, model, dm, trainer, callbacks, logger)
-    # optimized_metric = config.get("optimized_metric")
-    # if optimized_metric and optimized_metric not in trainer.callback_metrics:
-    #     raise Exception(
-    #         "Metric for hyperparameter optimization not found! "
-    #         "Make sure the `optimized_metric` in `hparams_search` config is correct!"
-    #     )
-    # score = trainer.callback_metrics.get(optimized_metric)
-    # return score
+    finish(config, model, dm, trainer, callbacks, logger)

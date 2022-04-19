@@ -1,6 +1,7 @@
 model_type : yolov5
 backbone : large_p6
-img_size : [960,768]
+img_size : [1024,896]
+pretrained : null
 #img_size : 960
 
 model:
@@ -12,6 +13,6 @@ model:
       pretrained : 0
     num_classes : 2
 #    img_size : ${module.img_size}
-    img_size : 960
+    img_size :  1024
   learning_rate : 1e-4
   weight_decay : 1e-6

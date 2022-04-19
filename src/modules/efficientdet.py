@@ -130,5 +130,5 @@ class EfficientDetModule(pl.LightningModule):
                     self.max_map50(v)
                     # self.log(f"{self.map.name}/{k}", v)
                     self.log("max_map_50", self.max_map50.compute())
-                else:
-                    self.log(f"val/{k}", v)
+                # else:
+                self.log(f"val/{k}", v)

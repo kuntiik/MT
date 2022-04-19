@@ -1,11 +1,13 @@
 __all__ = ["Dataset"]
 
+from pathlib import Path
 from typing import List, Optional, Sequence
 
 import numpy as np
 from PIL.ImageTransform import Transform
+from PIL import Image
 
-from src.core import ClassMap, BaseRecord, ImageRecordComponent, ClassMapRecordComponent, tasks
+from src.core import ClassMap, BaseRecord, ImageRecordComponent, ClassMapRecordComponent, tasks, FilepathRecordComponent, SizeRecordComponent
 
 
 class Dataset:
@@ -71,3 +73,24 @@ class Dataset:
                 record.detection.set_class_map(class_map)
 
         return cls(records=records, tfm=tfm)
+
+    @classmethod
+    def from_image_folder(cls, filepath: str, tfm: Transform = None, class_map: Optional[ClassMap] = None):
+        records = []
+        folder_path = Path(filepath)
+        for image in folder_path.iterdir():
+            if image.suffix not in ['.jpg', '.png', '.jpeg']:
+                continue
+            img = Image.open(image)
+            width, height = img.size
+            record = BaseRecord((FilepathRecordComponent(), SizeRecordComponent()))
+            record.set_filepath(image)
+            record.set_img_size(original=True)
+            record.set_record_id(image)
+            record.add_component(ClassMapRecordComponent(task=tasks.detection))
+            if class_map is not None:
+                record.detection.set_class_map(class_map)
+            records.append(record)
+        return cls(records=records, tfm=tfm)
+
+

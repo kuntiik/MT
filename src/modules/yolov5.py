@@ -54,6 +54,26 @@ class YoloV5Module(pl.LightningModule):
         self.map.accumulate(preds)
         self.log('val/loss', loss)
 
+    def test_step(self, batch, batch_idx):
+        (xb, yb), records = batch
+
+        inference_out, training_out = self(xb)
+        preds = yolov5.convert_raw_predictions(
+            batch=xb,
+            raw_preds=inference_out,
+            records=records,
+            detection_threshold=0.001,
+            nms_iou_threshold=0.6,
+        )
+        loss = self.compute_loss(training_out, yb)[0]
+        preds_torch, targets_torch = preds2dicts(preds, self.device)
+        # self.map.update(preds_torch, targets_torch)
+        self.map.accumulate(preds)
+        self.log('test/loss', loss)
+
+    def test_epoch_end(self, outs):
+        self.finalize_metrics(stage='test')
+
     def validation_epoch_end(self, outs):
         self.finalize_metrics()
 
@@ -88,14 +108,13 @@ class YoloV5Module(pl.LightningModule):
         return [optimizer], [scheduler]
 
 
-    def finalize_metrics(self) -> None:
+    def finalize_metrics(self, stage='val') -> None:
         metric_logs = self.map.finalize()
         for k, v in metric_logs.items():
             for entry in self.metrics_keys_to_log_to_prog_bar:
                 if entry[0] == k:
-                    self.log(entry[1], v, prog_bar=True)
+                    self.log(f"{stage}/map_50", v, prog_bar=True)
                     self.max_map50(v)
-                    # self.log(f"{self.map.name}/{k}", v)
                     self.log("max_map_50", self.max_map50.compute())
                 else:
-                    self.log(f"val/{k}", v)
+                    self.log(f"{stage}/{k}", v)

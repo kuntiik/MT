@@ -57,6 +57,27 @@ class MMDetModelAdapter(pl.LightningModule):
         for k, v in outputs["log_vars"].items():
             self.log(f"val/{k}", v)
 
+    def test_step(self, batch, batch_idx):
+        data, records = batch
+        outputs = self.model.train_step(data=data, optimizer=None)
+        raw_preds = self.model.forward_test(
+            imgs=[data["img"]], img_metas=[data["img_metas"]]
+        )
+        preds = self.convert_raw_predictions(
+            batch=data, raw_preds=raw_preds, records=records
+        )
+        self.map.accumulate(preds)
+        for k, v in outputs["log_vars"].items():
+            self.log(f"test/{k}", v)
+
+    def test_epoch_end(self, outs):
+        self.finalize_metrics(stage='test')
+
+    def predict_step(self, batch, batch_idx):
+        xb, records = batch
+        raw_preds = self(return_loss=False, rescale=False, **xb)
+        return self.convert_raw_predictions(batch=xb, raw_preds=raw_preds, records=records)
+
     def configure_optimizers(self):
         optimizer = Adam(
             self.parameters(),
@@ -72,20 +93,18 @@ class MMDetModelAdapter(pl.LightningModule):
             "name": "lr",
         }
         return [optimizer], [scheduler]
-        # return optimizer
 
     def validation_epoch_end(self, outs):
-        self.finalize_metrics()
+        self.finalize_metrics(stage='val')
 
 
-    def finalize_metrics(self) -> None:
+    def finalize_metrics(self, stage='val') -> None:
         metric_logs = self.map.finalize()
         for k, v in metric_logs.items():
             for entry in self.metrics_keys_to_log_to_prog_bar:
                 if entry[0] == k:
-                    self.log(entry[1], v, prog_bar=True)
+                    self.log(f"{stage}/map_50", v, prog_bar=True)
                     self.max_map50(v)
-                    # self.log(f"{self.map.name}/{k}", v)
                     self.log("max_map_50", self.max_map50.compute())
                 else:
-                    self.log(f"val/{k}", v)
+                    self.log(f"{stage}/{k}", v)

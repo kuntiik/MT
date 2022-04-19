@@ -1,7 +1,9 @@
 _target_ : src.datamodules.dental_caries.DentalCaries
-data_root : /datagrid/personal/kuntluka/dental_merged
+#data_root : /datagrid/personal/kuntluka/dental_merged
+data_root : /datagrid/personal/kuntluka/dental_rtg3
 model_type : ${module.model_type}
-ann_file : 'annotations2.json'
+#ann_file : 'annotations2.json'
+ann_file : 'annotations.json'
 batch_size : 1
 num_workers : 8
 limit_train_samples : null

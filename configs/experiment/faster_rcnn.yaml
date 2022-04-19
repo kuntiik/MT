@@ -1,0 +1,7 @@
+# @package _global_
+
+defaults:
+  - override /module : faster_rcnn.yaml
+
+datamodule:
+  batch_size : 4

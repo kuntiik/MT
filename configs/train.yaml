@@ -14,8 +14,8 @@ defaults:
   - override hydra/hydra_logging: colorlog
 
   # - logger: wandb # set logger here or use command line (e.g. `python run.py logger=wandb`)
+train : True
+test : True
 
 seed : 42
 name : null
-#ignore_warnings: False
-#print_config : True

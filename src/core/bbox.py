@@ -41,6 +41,12 @@ class BBox:
             return self.xyxy == other.xyxy
         return False
 
+    def approx_eq(self, other, tolerance=1):
+        x11, y11, x12, y12 = self.xyxy
+        x21, y21, x22, y22 = other.xyxy
+        return abs(x11 - x21) < tolerance and abs(y11 - y21) < tolerance and abs(x12 - x22) < tolerance and abs(
+            y12 - y22) < tolerance
+
     @property
     def width(self):
         return self.xmax - self.xmin
