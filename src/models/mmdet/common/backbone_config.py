@@ -24,6 +24,7 @@ from src.utils import check_all_model_params_in_groups2
 from src.utils.download_utils import download_url
 
 # mmdet_configs_path = src.models.mmdet.common.download_config.download_mmdet_configs()
+from src.utils.path_utils import get_root_dir
 
 
 class MMDetBackboneConfig:
@@ -124,7 +125,7 @@ def create_model_config(
         save_dir.mkdir(exist_ok=True, parents=True)
 
         fname = Path(weights_url).name
-        weights_path = save_dir / fname
+        weights_path = get_root_dir() / fname
 
         if not weights_path.exists() or force_download:
             download_url(url=weights_url, save_path=str(weights_path))

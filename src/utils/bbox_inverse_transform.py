@@ -103,7 +103,7 @@ def inverse_transform_record(
 
     return Prediction(pred=prediction, ground_truth=ground_truth)
 
-def predictions_to_fiftyone(predictions):
+def predictions_to_fiftyone(predictions, stage=None):
     data = {}
     for pred in predictions:
         if type(pred) == list and len(pred) == 1:
@@ -118,7 +118,8 @@ def predictions_to_fiftyone(predictions):
         data[img_id] = {
             "bboxes" : bboxes_list,
             "labels" : labels,
-            "scores" : scores
+            "scores" : scores,
+            "stage" : stage
         }
     return data
 
