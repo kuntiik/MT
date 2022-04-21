@@ -79,16 +79,16 @@ class YoloV5Module(pl.LightningModule):
 
     def predict_step(self, batch, batch_idx):
         xb, records = batch
+        xb = xb[0]
         raw_preds = self(xb)[0]
         return yolov5.convert_raw_predictions(
             batch=xb,
             raw_preds=raw_preds,
-            detection_threshold=0,
-            num_iou_threshold = 1,
+            records=records,
+            detection_threshold=0.005,
+            nms_iou_threshold = 0.8,
             keep_images=False
         )
-
-
 
     def configure_optimizers(self):
         optimizer = Adam(

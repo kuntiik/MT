@@ -3,7 +3,7 @@ __version__ = '2.0'
 # Interface for accessing the Microsoft COCO dataset.
 
 # Microsoft COCO is a large image dataset designed for object detection,
-# segmentation, and caption generation. pycocotools is a Python API that
+# segmentation.py, and caption generation. pycocotools is a Python API that
 # assists in loading, parsing and visualizing the annotations in COCO.
 # Please visit http://mscoco.org/ for more information on COCO, including
 # for the data, paper, and tutorials. The exact format of the annotations
@@ -27,7 +27,7 @@ __version__ = '2.0'
 #  loadAnns   - Load anns with the specified ids.
 #  loadCats   - Load cats with the specified ids.
 #  loadImgs   - Load imgs with the specified ids.
-#  annToMask  - Convert segmentation in an annotation to binary mask.
+#  annToMask  - Convert segmentation.py in an annotation to binary mask.
 #  showAnns   - Display the specified annotations.
 #  loadRes    - Load algorithm results and create API for accessing them.
 #  download   - Download COCO images from mscoco.org server.
@@ -227,7 +227,7 @@ class COCO:
         """
         if len(anns) == 0:
             return 0
-        if 'segmentation' in anns[0] or 'keypoints' in anns[0]:
+        if 'segmentation.py' in anns[0] or 'keypoints' in anns[0]:
             datasetType = 'instances'
         elif 'caption' in anns[0]:
             datasetType = 'captions'
@@ -286,8 +286,8 @@ class COCO:
             for id, ann in enumerate(anns):
                 bb = ann['bbox']
                 x1, x2, y1, y2 = [bb[0], bb[0]+bb[2], bb[1], bb[1]+bb[3]]
-                if not 'segmentation' in ann:
-                    ann['segmentation'] = [[x1, y1, x1, y2, x2, y2, x2, y1]]
+                if not 'segmentation.py' in ann:
+                    ann['segmentation.py'] = [[x1, y1, x1, y2, x2, y2, x2, y1]]
                 ann['area'] = bb[2]*bb[3]
                 ann['id'] = id+1
                 ann['iscrowd'] = 0

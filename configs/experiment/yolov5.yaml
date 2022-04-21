@@ -4,4 +4,4 @@ defaults:
   - override /module : yolov5.yaml
 
 datamodule:
-  batch_size : 4
+  batch_size : 3

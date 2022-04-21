@@ -1,6 +1,6 @@
 import numpy as np
-from pycocotools.coco import COCO
-from pycocotools.cocoeval import COCOeval, Params
+from src.evaluation.pycocotools.coco import COCO
+from src.evaluation.pycocotools.cocoeval import COCOeval, Params
 
 
 class PredictionEval:

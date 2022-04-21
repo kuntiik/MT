@@ -51,28 +51,28 @@ class EfficientDetModule(pl.LightningModule):
                 (xb, yb), raw_preds["detections"], records, detection_threshold=0.0
             )
             loss = efficientdet.loss_fn(raw_preds, yb)
-            # preds_torch, targets_torch = preds2dicts(preds, self.device)
-            # self.map(preds_torch, targets_torch)
             self.map.accumulate(preds)
-
         for k, v in raw_preds.items():
             if "loss" in k:
                 self.log(f"val/{k}", v)
 
-    def predict_step(self, batch, batch_idx):
+    def test_step(self, batch, batch_idx):
         (xb, yb), records = batch
         with torch.no_grad():
             raw_preds = self(xb, yb)
             preds = efficientdet.convert_raw_predictions(
-                (xb, yb),
-                raw_preds["detections"],
-                records,
-                detection_threshold=0.001,
-                # nms_iou_threshold=0.6,
+                (xb, yb), raw_preds["detections"], records, detection_threshold=0.0
             )
-        return preds
+            loss = efficientdet.loss_fn(raw_preds, yb)
+            self.map.accumulate(preds)
+        for k, v in raw_preds.items():
+            if "loss" in k:
+                self.log(f"test/{k}", v)
 
-    def predict_batch(self, batch, batch_idx):
+    def test_epoch_end(self, outputs) -> None:
+        self.finalize_metrics(stage='test')
+
+    def predict_step(self, batch, batch_idx):
         (xb, yb), records = batch
         with torch.no_grad():
             raw_preds = self(xb, yb)
@@ -91,7 +91,7 @@ class EfficientDetModule(pl.LightningModule):
         # self.log_dict("val/", result)
         # self.map.reset()
         # self.map.finalize()
-        self.finalize_metrics()
+        self.finalize_metrics(stage='val')
     #
     # def on_epoch_end(self):
     #     self.mAP.reset()
@@ -121,14 +121,14 @@ class EfficientDetModule(pl.LightningModule):
         }
         return [optimizer], [scheduler]
 
-    def finalize_metrics(self) -> None:
+
+    def finalize_metrics(self, stage='val') -> None:
         metric_logs = self.map.finalize()
         for k, v in metric_logs.items():
             for entry in self.metrics_keys_to_log_to_prog_bar:
                 if entry[0] == k:
-                    self.log(entry[1], v, prog_bar=True)
+                    self.log(f"{stage}/map_50", v, prog_bar=True)
                     self.max_map50(v)
-                    # self.log(f"{self.map.name}/{k}", v)
                     self.log("max_map_50", self.max_map50.compute())
-                # else:
-                self.log(f"val/{k}", v)
+                else:
+                    self.log(f"{stage}/{k}", v)
