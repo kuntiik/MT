@@ -60,20 +60,21 @@ class PredictionEval:
             {"ap": 1, "iouThr": 0.5, "areaRng": "medium", "maxDets": 100},
             {"ap": 1, "iouThr": 0.5, "areaRng": "large", "maxDets": 100},
         ]
-        val_results = self.evaluate_map(queries, stage="val")
-        train_results = self.evaluate_map(queries, stage="train")
-        test_results = self.evaluate_map(queries, stage="test")
+        val_results = self.evaluate_map(queries, stage="val", verbose=False)
+        train_results = self.evaluate_map(queries, stage="train", verbose=False)
+        test_results = self.evaluate_map(queries, stage="test", verbose=False)
 
         val_results = [round(res, 3) for res in val_results]
         test_results = [round(res, 3) for res in test_results]
         train_results = [round(res, 3) for res in train_results]
 
-        text = f"""stage  & AP & AP@.3 & AP@.5 & AP@.75 & AP@.5_S & AP@.5_M & AP@.5_L \\ \hline
-        training & {train_results[0]}& {train_results[1]} & {train_results[2]} & {train_results[3]} 
-        & {train_results[4]} & {train_results[5]} & {train_results[6]}
-        validation & {val_results[0]}& {val_results[1]} & {val_results[2]} & {val_results[3]} 
-        & {val_results[4]} & {val_results[5]} & {val_results[6]}
-        """
+        # text = f"""stage  & AP & AP@.3 & AP@.5 & AP@.75 & AP@.5_S & AP@.5_M & AP@.5_L \\ \hline
+        # training & {train_results[0]}& {train_results[1]} & {train_results[2]} & {train_results[3]}
+        # & {train_results[4]} & {train_results[5]} & {train_results[6]} \\hline
+        # validation & {val_results[0]}& {val_results[1]} & {val_results[2]} & {val_results[3]}
+        # & {val_results[4]} & {val_results[5]} & {val_results[6]} \\hline
+        # """
+        text = f"""validation & {test_results[0]}& {test_results[1]} & {test_results[2]} & {test_results[3]} & {test_results[4]} & {test_results[5]} & {test_results[6]} \\hline"""
         return text
 
     def indices_by_stage(self, stage):
@@ -82,11 +83,13 @@ class PredictionEval:
             evaluate_imgs = self.val_ids
         elif stage == "train":
             evaluate_imgs = self.train_ids
+        elif stage == "test":
+            evaluate_imgs = self.test_ids
         else:  # stage == 'all':
             evaluate_imgs = list(self.img_id2name.keys())
         return evaluate_imgs
 
-    def evaluate_map(self, queries, stage="all", summary=False):
+    def evaluate_map(self, queries, stage="all", summary=False, verbose=True):
         evaluate_imgs = self.indices_by_stage(stage)
 
         tmp_map_params = self.map_params
@@ -96,7 +99,8 @@ class PredictionEval:
         self.cocoEval.accumulate()
         results = []
         for query in queries:
-            print(self.cocoEval._summarize(**query))
+            if verbose:
+                print(self.cocoEval._summarize(**query))
             results.append(self.cocoEval._summarize(**query))
         if summary:
             self.cocoEval.summarize()
@@ -113,3 +117,21 @@ class PredictionEval:
         self.cocoEval.accumulate()
         precisions = self.cocoEval.eval["precision"][iou_idx, :, 0, area_idx, 2]
         return precisions
+
+    def map_query(self, iouThr=0.5, stage='all', areaRng='all'):
+        evaluate_imgs = self.indices_by_stage(stage)
+        area_idx = self.cocoEval.params.area_str2idx(areaRng)
+        iou_idx = np.where(self.cocoEval.params.iouThrs == iouThr)[0][0]
+        self.cocoEval.params.imgIds = evaluate_imgs
+        self.cocoEval.evaluate()
+        self.cocoEval.accumulate()
+        query = {"ap": 1, "iouThr": iouThr, "areaRng": areaRng, "maxDets": 100}
+        return self.cocoEval._summarize(**query, doprint=False)
+
+    def evaluate_img_by_name(self, img_name):
+        self.cocoEval.params.imgIds = [self.img_name2id[img_name]]
+        self.cocoEval.evaluate()
+        self.cocoEval.accumulate()
+        query = {"ap": 1, "iouThr": 0.5, "areaRng": 'all', "maxDets": 100}
+        # query = {"ap": 1},
+        return self.cocoEval._summarize(**query, doprint=False)

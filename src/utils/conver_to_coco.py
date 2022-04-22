@@ -12,7 +12,7 @@ def to_coco(pred_dict, annotations):
     for image in ann_file['images']:
         id = image['id']
         pred = preds[image['file_name']]
-        for (bbox, score, label, stage) in zip(pred['bboxes'], pred['scores'], pred['labels'], pred['stage']):
+        for (bbox, score) in zip(pred['bboxes'], pred['scores']):
             x1, y1, x2, y2 = bbox
             width, height = x2 - x1, y2 - y1
             final_box = [x1, y1, width, height]

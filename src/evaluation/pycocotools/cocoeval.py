@@ -361,7 +361,7 @@ class COCOeval:
         toc = time.time()
         print("DONE (t={:0.2f}s).".format(toc - tic))
 
-    def _summarize(self, ap=1, iouThr=None, areaRng="all", maxDets=100):
+    def _summarize(self, ap=1, iouThr=None, areaRng="all", maxDets=100, doprint=True):
         p = self.params
         iStr = " {:<18} {} @[ IoU={:<9} | area={:>6s} | maxDets={:>3d} ] = {:0.3f}"
         titleStr = "Average Precision" if ap == 1 else "Average Recall"
@@ -397,7 +397,9 @@ class COCOeval:
             mean_s = -1
         else:
             mean_s = np.mean(s[s > -1])
-        print(iStr.format(titleStr, typeStr, iouStr, areaRng, maxDets, mean_s))
+
+        if doprint:
+            print(iStr.format(titleStr, typeStr, iouStr, areaRng, maxDets, mean_s))
         return mean_s
 
     """

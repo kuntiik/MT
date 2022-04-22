@@ -76,7 +76,12 @@ class MMDetModelAdapter(pl.LightningModule):
     def predict_step(self, batch, batch_idx):
         xb, records = batch
         raw_preds = self(return_loss=False, rescale=False, **xb)
-        return self.convert_raw_predictions(batch=xb, raw_preds=raw_preds, records=records)
+        preds = self.convert_raw_predictions(batch=xb, raw_preds=raw_preds, records=records)
+        self.map.accumulate(preds)
+        return preds
+
+    def on_predict_epoch_end(self, results) -> None:
+        self.finalize_metrics_pred(stage='pred')
 
     def configure_optimizers(self):
         optimizer = Adam(
@@ -108,3 +113,10 @@ class MMDetModelAdapter(pl.LightningModule):
                     self.log("max_map_50", self.max_map50.compute())
                 else:
                     self.log(f"{stage}/{k}", v)
+
+    def finalize_metrics_pred(self, stage='val') -> None:
+        metric_logs = self.map.finalize()
+        for k, v in metric_logs.items():
+            for entry in self.metrics_keys_to_log_to_prog_bar:
+                if entry[0] == k:
+                    print(v)

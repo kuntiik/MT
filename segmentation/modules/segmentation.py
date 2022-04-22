@@ -19,9 +19,9 @@ class SegmentationModule(LightningModule):
 
         self.net = UNet(
             num_classes=num_classes,
-            num_layers=self.num_layers,
-            features_start=self.features_start,
-            bilinear=self.bilinear,
+            num_layers=num_layers,
+            features_start=features_start,
+            bilinear=bilinear,
         )
 
     def forward(self, x):
@@ -32,7 +32,8 @@ class SegmentationModule(LightningModule):
         img = img.float()
         mask = mask.long()
         out = self(img)
-        loss_val = F.binary_cross_entropy(out, mask)
+        loss_val = F.cross_entropy(out, mask, ignore_index=250)
+        # loss_val = F.binary_cross_entropy(out, mask)
         self.log('train/loss', loss_val)
         return loss_val
         # log_dict = {"train_loss": loss_val}
@@ -43,18 +44,18 @@ class SegmentationModule(LightningModule):
         img = img.float()
         mask = mask.long()
         out = self(img)
-        # loss_val = F.cross_entropy(out, mask, ignore_index=250)
-        loss_val = F.binary_cross_entropy(out, mask)
+        loss_val = F.cross_entropy(out, mask, ignore_index=250)
+        # loss_val = F.binary_cross_entropy(out, mask)
         self.log('val/loss', loss_val)
         # return {"val_loss": loss_val}
 
-    def validation_epoch_end(self, outputs):
-        loss_val = torch.stack([x["val_loss"] for x in outputs]).mean()
-        self.log('val/epoch_loss', loss_val, prog_bar=True)
+    # def validation_epoch_end(self, outputs):
+    #     loss_val = torch.stack([x["val_loss"] for x in outputs]).mean()
+    #     self.log('val/epoch_loss', loss_val, prog_bar=True)
     #     log_dict = {"val_loss": loss_val}
     #     return {"log": log_dict, "val_loss": log_dict["val_loss"], "progress_bar": log_dict}
 
     def configure_optimizers(self):
         opt = torch.optim.Adam(self.net.parameters(), lr=self.hparams.lr)
-        sch = torch.optim.lr_scheduler.ReduceLROnPlateau(opt)
+        sch = {"scheduler" : torch.optim.lr_scheduler.ReduceLROnPlateau(opt), "monitor" : 'val/loss'}
         return [opt], [sch]

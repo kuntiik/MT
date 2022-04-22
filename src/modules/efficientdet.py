@@ -8,6 +8,7 @@ import torch
 
 import src.models.efficientdet as efficientdet
 from torch.optim import Adam, SGD
+from effdet import DetBenchPredict, unwrap_bench
 
 from src.core.convertions import preds2dicts
 from src.metrics.coco_metric import COCOMetric, COCOMetricType
@@ -72,17 +73,20 @@ class EfficientDetModule(pl.LightningModule):
     def test_epoch_end(self, outputs) -> None:
         self.finalize_metrics(stage='test')
 
+    def on_predict_start(self) -> None:
+        self.bench = DetBenchPredict(unwrap_bench(self.model)).eval().to(self.device)
+
     def predict_step(self, batch, batch_idx):
-        (xb, yb), records = batch
-        with torch.no_grad():
-            raw_preds = self(xb, yb)
-            preds = efficientdet.convert_raw_predictions(
-                (xb, yb),
-                raw_preds["detections"],
-                records,
-                detection_threshold=0.001,
-                # nms_iou_threshold=0.6,
-            )
+        # (xb, yb), records = batch
+        (imgs, img_info), records = batch
+        raw_preds = self.bench(x=imgs, img_info=img_info)
+        preds = efficientdet.convert_raw_predictions(
+            batch=batch,
+            raw_preds=raw_preds,
+            records=records,
+            detection_threshold=0.001,
+            # nms_iou_threshold=0.6,
+        )
         return preds
 
     def validation_epoch_end(self, outs):
