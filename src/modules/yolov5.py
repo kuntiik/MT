@@ -2,7 +2,7 @@ __all__ = ["YoloV5Module"]
 
 import pytorch_lightning.callbacks
 import torch
-from torch.optim import Adam
+from torch.optim import AdamW
 from torchmetrics import MaxMetric
 from yolov5.utils.loss import ComputeLoss
 import pytorch_lightning as pl
@@ -91,7 +91,7 @@ class YoloV5Module(pl.LightningModule):
 
 
     def configure_optimizers(self):
-        optimizer = Adam(
+        optimizer = AdamW(
             self.parameters(),
             lr=self.hparams.learning_rate,
             weight_decay=self.hparams.weight_decay,
