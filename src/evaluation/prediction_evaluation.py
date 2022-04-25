@@ -50,7 +50,7 @@ class PredictionEval:
         ]
         return queries
 
-    def get_latex_table(self):
+    def get_latex_table(self,name="", stages=['test']):
         queries = [
             {"ap": 1},
             {"ap": 1, "iouThr": 0.3, "areaRng": "all", "maxDets": 100},
@@ -60,13 +60,18 @@ class PredictionEval:
             {"ap": 1, "iouThr": 0.5, "areaRng": "medium", "maxDets": 100},
             {"ap": 1, "iouThr": 0.5, "areaRng": "large", "maxDets": 100},
         ]
-        val_results = self.evaluate_map(queries, stage="val", verbose=False)
-        train_results = self.evaluate_map(queries, stage="train", verbose=False)
-        test_results = self.evaluate_map(queries, stage="test", verbose=False)
 
-        val_results = [round(res, 3) for res in val_results]
-        test_results = [round(res, 3) for res in test_results]
-        train_results = [round(res, 3) for res in train_results]
+        text = ""
+        if 'val' in stages:
+            val_results = self.evaluate_map(queries, stage="val", verbose=False)
+            val_results = [round(res, 3) for res in val_results]
+        if 'train' in stages:
+            train_results = self.evaluate_map(queries, stage="train", verbose=False)
+            train_results = [round(res, 3) for res in train_results]
+        if 'test' in stages:
+            test_results = self.evaluate_map(queries, stage="test", verbose=False)
+            test_results = [round(res, 3) for res in test_results]
+            text = f"""{name} & {test_results[0]}& {test_results[1]} & {test_results[2]} & {test_results[3]} & {test_results[4]} & {test_results[5]} & {test_results[6]} \\hline"""
 
         # text = f"""stage  & AP & AP@.3 & AP@.5 & AP@.75 & AP@.5_S & AP@.5_M & AP@.5_L \\ \hline
         # training & {train_results[0]}& {train_results[1]} & {train_results[2]} & {train_results[3]}
@@ -74,8 +79,13 @@ class PredictionEval:
         # validation & {val_results[0]}& {val_results[1]} & {val_results[2]} & {val_results[3]}
         # & {val_results[4]} & {val_results[5]} & {val_results[6]} \\hline
         # """
-        text = f"""validation & {test_results[0]}& {test_results[1]} & {test_results[2]} & {test_results[3]} & {test_results[4]} & {test_results[5]} & {test_results[6]} \\hline"""
         return text
+
+    def get_data(self, name):
+        text = self.get_latex_table(name=name, stages=['test'])
+        precisions = self.precision_by_iou(stage="test")
+        return text, precisions
+
 
     def indices_by_stage(self, stage):
         evaluate_imgs = []
@@ -116,7 +126,12 @@ class PredictionEval:
         self.cocoEval.evaluate()
         self.cocoEval.accumulate()
         precisions = self.cocoEval.eval["precision"][iou_idx, :, 0, area_idx, 2]
-        return precisions
+        recalls = np.linspace(0,1,101)
+        confidences = self.cocoEval.eval["scores"][iou_idx, :, 0, area_idx, 2]
+        f1_score = [(p*r)/(p+r)*2 for p,r in zip(precisions, recalls)]
+        best_idx = np.argmax(f1_score)
+        text = f"""{round(precisions[best_idx],3)} & {round(recalls[best_idx],3)} & {round(f1_score[best_idx],3)} & {round(confidences[best_idx],3)}"""
+        return text
 
     def map_query(self, iouThr=0.5, stage='all', areaRng='all'):
         evaluate_imgs = self.indices_by_stage(stage)
