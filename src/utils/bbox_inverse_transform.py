@@ -3,7 +3,7 @@ from typing import List, Any, Callable, Tuple
 import numpy as np
 
 from src.core import BBox, record, BaseRecord, FilepathRecordComponent, BBoxesRecordComponent, ScoresRecordComponent, \
-    InstancesLabelsRecordComponent, Prediction
+    InstancesLabelsRecordComponent, Prediction, ImageRecordComponent
 from src.transforms.albumentations_utils import resize_and_pad
 
 
@@ -45,6 +45,17 @@ def inverse_transform_bbox(
     before_width, before_height = original_size
     after_width, after_height = size
 
+    bbox = copy.deepcopy(bbox)
+    x1, y1, x2, y2 = bbox.xyxy
+    width_frac = 1024 / 1068
+    height_frac = 896 / before_height
+    x1 /= width_frac
+    x2 /= width_frac
+    y1 /= height_frac
+    y2 /= height_frac
+    x1, x2, y1, y2 = (max(x1, 0), min(x2, before_width), max(y1, 0), min(y2, before_height))
+    return BBox.from_xyxy(x1,y1,x2,y2)
+
     no_pad_height, no_pad_width = get_size_without_padding(
         tfms, before_height, before_width, after_height, after_width
     )
@@ -77,7 +88,7 @@ def inverse_transform_record(
     size = record.common.img_size
 
     if tfms is None:
-        tfms = resize_and_pad(size)
+        tfms = resize_and_pad((1024,896))
 
     prediction.detection.set_class_map(record.detection.class_map)
 
@@ -90,20 +101,25 @@ def inverse_transform_record(
 
     ground_truth = None
     # if record.ground_truth is not None:
-    #     ground_truth = BaseRecord(
-    #         (
-    #             FilepathRecordComponent(),
-    #             InstancesLabelsRecordComponent(),
-    #             BBoxesRecordComponent(),
-    #         )
-    #     )
-    #     inverted_bboxes = [inverse_transform_bbox(bbox) for bbox in record.ground_truth.detection.bboxes]
-    #     ground_truth.detection.set_bboxes(inverted_bboxes)
-    #     ground_truth.detection.set_labels(record.ground_truth.detection.labels)
+    ground_truth = BaseRecord(
+        (
+            FilepathRecordComponent(),
+            InstancesLabelsRecordComponent(),
+            BBoxesRecordComponent(),
+            ImageRecordComponent(),
+        )
+    )
+    ground_truth = copy.deepcopy(record.ground_truth)
+    # ground_truth.detection.set_class_map(record.detection.class_map)
+    # ground_truth.record_id = record.record_id
+    inverted_bboxes = [inverse_transform_bbox(bbox, tfms, orig_size, size) for bbox in record.ground_truth.detection.bboxes]
+    ground_truth.detection.set_bboxes(inverted_bboxes)
+    # ground_truth.set_img(record.img)
+    # ground_truth.detection.set_labels(record.ground_truth.detection.labels)
 
     return Prediction(pred=prediction, ground_truth=ground_truth)
 
-def predictions_to_fiftyone(predictions):
+def predictions_to_fiftyone(predictions, stage=None):
     data = {}
     for pred in predictions:
         if type(pred) == list and len(pred) == 1:
@@ -118,7 +134,8 @@ def predictions_to_fiftyone(predictions):
         data[img_id] = {
             "bboxes" : bboxes_list,
             "labels" : labels,
-            "scores" : scores
+            "scores" : scores,
+            "stage" : stage
         }
     return data
 

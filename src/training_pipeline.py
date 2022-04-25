@@ -69,7 +69,7 @@ def train(config: DictConfig):
         config.trainer,
         logger=logger,
         callbacks=callbacks,
-        strategy=DDPStrategy(find_unused_parameters=False),
+        # strategy=DDPStrategy(find_unused_parameters=False),
     )
 
     log_hyperparameters(

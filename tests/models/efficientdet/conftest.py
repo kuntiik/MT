@@ -9,7 +9,7 @@ from src.models.efficientdet.backbones import tf_lite0
 @pytest.fixture()
 def fridge_efficientdet_model() -> nn.Module:
     WEIGHTS_URL = "https://github.com/airctic/model_zoo/releases/download/m2/fridge_tf_efficientdet_lite0.pt"
-    # TODO: HACK 5+1 in num_classes (becaues of change in model.py)
+    # TODO: HACK 5+1 in num_classes (becaues of change in two_stage_model.py)
     backbone = tf_lite0(pretrained=False)
     model = efficientdet.model(backbone=backbone, num_classes=5, img_size=384)
 

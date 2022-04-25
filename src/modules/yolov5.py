@@ -79,16 +79,21 @@ class YoloV5Module(pl.LightningModule):
 
     def predict_step(self, batch, batch_idx):
         xb, records = batch
+        xb = xb[0]
         raw_preds = self(xb)[0]
-        return yolov5.convert_raw_predictions(
+        preds =  yolov5.convert_raw_predictions(
             batch=xb,
             raw_preds=raw_preds,
-            detection_threshold=0,
-            num_iou_threshold = 1,
+            records=records,
+            detection_threshold=0.001,
+            nms_iou_threshold = 0.6,
             keep_images=False
         )
+        self.map.accumulate(preds)
+        return preds
 
-
+    def on_predict_epoch_end(self, results) -> None:
+        self.finalize_metrics_pred(stage='pred')
 
     def configure_optimizers(self):
         optimizer = AdamW(
@@ -118,3 +123,10 @@ class YoloV5Module(pl.LightningModule):
                     self.log("max_map_50", self.max_map50.compute())
                 else:
                     self.log(f"{stage}/{k}", v)
+
+    def finalize_metrics_pred(self, stage='val') -> None:
+        metric_logs = self.map.finalize()
+        for k, v in metric_logs.items():
+            for entry in self.metrics_keys_to_log_to_prog_bar:
+                if entry[0] == k:
+                    print(v)
