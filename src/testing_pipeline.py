@@ -24,34 +24,11 @@ from src.utils.logger_utils import log_hyperparameters, finish
 import logging
 
 
-import torch.nn as nn
-def bn2gn(model):
-    for n, module in model.named_children():
-        if len(list(module.named_children())) > 0:
-            bn2gn(module)
 
-        if isinstance(module, nn.BatchNorm2d):
-            print(module)
-            setattr(model, n, nn.GroupNorm(4, module.num_features))
+def test(config: DictConfig):
 
-
-def train(config: DictConfig):
     if config.get("seed"):
         seed_everything(config.seed, workers=True)
-
-    # convert relative path to absolute (hydra requires absolute path)
-    ckpt_path = config.trainer.get("resume_from_checkpoint")
-    if ckpt_path and not os.path.isabs(ckpt_path):
-        config.trainer.resume_from_checkpoint = os.path.join(
-            hydra.utils.get_original_cwd(), ckpt_path
-        )
-
-    callbacks: List[Callback] = []
-    if "callbacks" in config:
-        for _, cb_conf in config.callbacks.items():
-            if "_target_" in cb_conf:
-                log.info(f"Instantiating callback <{cb_conf._target_}>")
-                callbacks.append(hydra.utils.instantiate(cb_conf))
 
     logger: List[LightningLoggerBase] = []
     if "logger" in config:
@@ -84,25 +61,8 @@ def train(config: DictConfig):
     trainer: Trainer = hydra.utils.instantiate(
         config.trainer,
         logger=logger,
-        callbacks=callbacks,
         # strategy=DDPStrategy(find_unused_parameters=False),
     )
 
-    log_hyperparameters(
-        config=config,
-        model=model,
-        datamodule=dm,
-        trainer=trainer,
-        callbacks=callbacks,
-        logger=logger,
-    )
-
-    if config.get('train'):
-        log.info("Starting training")
-        trainer.fit(model=model, datamodule=dm)
-    if config.get('test'):
-        ckpt_path = "best"
-        log.info("Starting testing")
-        trainer.test(model=model, datamodule=dm, ckpt_path=ckpt_path)
-
-    finish(config, model, dm, trainer, callbacks, logger)
+    log.info("Starting testing")
+    trainer.test(model=model, datamodule=dm)

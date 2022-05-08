@@ -17,14 +17,18 @@ class PredictionEval:
         )
         self.map_params = params
 
-    def load_data_coco_files(self, annotations_path, predictions_path, train_val_names=None):
+    def load_data_coco_files(self, annotations_path, predictions_coco, train_val_names=None):
 
         self.cocoGt = COCO(annotations_path)
         for image in self.cocoGt.imgs.values():
             self.img_name2id[image["file_name"]] = image["id"]
             self.img_id2name[image["id"]] = image["file_name"]
 
-        self.cocoDt = self.cocoGt.loadRes(predictions_path)
+        if type(predictions_coco) == dict and 'annotations' in predictions_coco.keys():
+            predictions_anns = predictions_coco['annotations']
+        else:
+            predictions_anns = predictions_coco
+        self.cocoDt = self.cocoGt.loadRes(predictions_anns)
         self.cocoEval = COCOeval(self.cocoGt, self.cocoDt)
         if train_val_names is not None:
             if train_val_names["type"] == "id":
@@ -71,7 +75,7 @@ class PredictionEval:
         if 'test' in stages:
             test_results = self.evaluate_map(queries, stage="test", verbose=False)
             test_results = [round(res, 3) for res in test_results]
-            text = f"""{name} & {test_results[0]}& {test_results[1]} & {test_results[2]} & {test_results[3]} & {test_results[4]} & {test_results[5]} & {test_results[6]} \\hline"""
+            text = f"""{name} & {test_results[0]}& {test_results[1]} & {test_results[2]} & {test_results[3]} & {test_results[4]} & {test_results[5]} & {test_results[6]} \\\\ \\hline"""
 
         # text = f"""stage  & AP & AP@.3 & AP@.5 & AP@.75 & AP@.5_S & AP@.5_M & AP@.5_L \\ \hline
         # training & {train_results[0]}& {train_results[1]} & {train_results[2]} & {train_results[3]}

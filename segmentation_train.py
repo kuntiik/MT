@@ -9,7 +9,7 @@ def train():
     annotations_path = Path('/datagrid/personal/kuntluka/dental_rtg1/annotations.json')
     imgs_path = Path('/datagrid/personal/kuntluka/dental_rtg1/images')
     logger = WandbLogger(project='Segmentation', job_type='train', log_model=False)
-    trainer = Trainer(gpus=1, max_epochs=10)
+    trainer = Trainer(gpus=1, min_epochs=30, max_epochs=50, logger=logger)
     # transforms = A.Compose[A.HorizontalFlip(p=0.5), A.VerticalFlip(p=0.5)]
     dm = CariesRestorationDatamodule(imgs_path, annotations_path, batch_size=1, num_workers=8)
     model = SegmentationModule(num_classes=2)

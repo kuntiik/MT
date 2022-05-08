@@ -1,6 +1,11 @@
 import torch
 from pytorch_lightning import LightningModule, seed_everything
 from torch.nn import functional as F
+import torch.nn as nn
+import torchvision.transforms as transforms
+from segmentation.utils.losses import *
+from torchmetrics import MeanMetric
+
 
 # from segmentation.modules import
 from segmentation.models.Unet import UNet
@@ -16,6 +21,9 @@ class SegmentationModule(LightningModule):
     ):
         super().__init__()
         self.save_hyperparameters()
+        self.loss = nn.CrossEntropyLoss()
+        self.iou_metrics = MeanMetric()
+        self.dice_metric = MeanMetric()
 
         self.net = UNet(
             num_classes=num_classes,
@@ -32,23 +40,31 @@ class SegmentationModule(LightningModule):
         img = img.float()
         mask = mask.long()
         out = self(img)
-        loss_val = F.cross_entropy(out, mask, ignore_index=250)
-        # loss_val = F.binary_cross_entropy(out, mask)
+        loss_val = self.loss(out, mask) + soft_dice_loss(out, mask)
         self.log('train/loss', loss_val)
         return loss_val
-        # log_dict = {"train_loss": loss_val}
-        # return {"loss": loss_val, "log": log_dict, "progress_bar": log_dict}
 
     def validation_step(self, batch, batch_idx):
         img, mask = batch
         img = img.float()
         mask = mask.long()
         out = self(img)
-        loss_val = F.cross_entropy(out, mask, ignore_index=250)
-        # loss_val = F.binary_cross_entropy(out, mask)
+        loss_val = self.loss(out, mask) + soft_dice_loss(out, mask)
         self.log('val/loss', loss_val)
-        # return {"val_loss": loss_val}
+        self.iou_metrics.update(iou(out, mask))
+        self.dice_metric.update(dice_values(out, mask))
 
+    def validation_epoch_end(self, outs):
+        self.log("val/iou", self.iou_metrics, prog_bar=True)
+        self.log("val/dice_metric", self.dice_metric)
+
+    # def predict_step(self, batch, batch_idx):
+    #     out = self(batch)
+    #     out_probs = F.softmax(out, dim=1)[0]
+    #     # out = F.softmax()
+    #     # tf = transforms.Compose()
+    #     out = out_probs > 0.5
+    #     return out
     # def validation_epoch_end(self, outputs):
     #     loss_val = torch.stack([x["val_loss"] for x in outputs]).mean()
     #     self.log('val/epoch_loss', loss_val, prog_bar=True)

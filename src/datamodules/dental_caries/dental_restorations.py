@@ -10,12 +10,13 @@ import numpy as np
 
 from pytorch_lightning import LightningDataModule
 import albumentations as A
+from albumentations.pytorch.transforms import ToTensorV2
 
 
 class COCOSegmentation(Dataset):
     def __init__(self, img_root, ann_path, transforms=None):
         super().__init__()
-        self.transforms = transforms
+        # self.transforms = transforms
         self.img_root = img_root if type(img_root) == str else Path(img_root)
         self.coco = COCO(ann_path)
         self.ids = list(sorted(self.coco.imgs.keys()))
@@ -23,10 +24,12 @@ class COCOSegmentation(Dataset):
         self.transforms = A.Compose(
             [*transforms, *self._default_transforms((1068, 847))]) if transforms is not None else A.Compose(
             [*self._default_transforms((1068, 847))])
+        # self.val_transforms = A.Compose([*self._default_transforms(1068, 847)])
 
     def _load_img(self, id: int) -> Image.Image:
         path = self.coco.loadImgs(id)[0]['file_name']
-        return np.asarray(Image.open(self.img_root / path).convert("RGB")).transpose(2,0,1)
+        # return np.asarray(Image.open(self.img_root / path).convert("RGB")).transpose(2,0,1)
+        return np.asarray(Image.open(self.img_root / path).convert("RGB"))
 
     def _load_mask(self, id: int) -> Image.Image:
         targets = self.coco.loadAnns(self.coco.getAnnIds(imgIds=id, catIds=self.cat_id))
@@ -44,6 +47,7 @@ class COCOSegmentation(Dataset):
         normalize_stat = self.dental_caries_statistics
         return [
             A.Normalize(mean=self.dental_caries_statistics["mean"], std=self.dental_caries_statistics["std"]),
+            ToTensorV2()
         ]
 
     def __getitem__(self, index):
@@ -65,9 +69,18 @@ class CariesRestorationDatamodule(LightningDataModule):
         super().__init__()
         self.save_hyperparameters()
 
+        self.train_transforms = [
+            A.VerticalFlip(p=0.5),
+            A.HorizontalFlip(p=0.5),
+            A.Rotate(limit=10, p=0.3),
+            A.Affine(translate_percent=(-0.1, 0.1), p=0.5),
+            A.GaussianBlur(blur_limit=(7, 31), p=0.3),
+            A.RandomGamma(gamma_limit=(60, 140), p=0.3),
+        ]
+
     def setup(self, stage : Optional[str] = None):
         tf, vf, tstf = self.hparams.data_split
-        dataset = COCOSegmentation(self.hparams.img_root, self.hparams.ann_path, self.hparams.transforms)
+        dataset = COCOSegmentation(self.hparams.img_root, self.hparams.ann_path, self.train_transforms)
         tn, vn, tstn = int(tf * len(dataset)), int(vf * len(dataset)), int(tstf * len(dataset))
         tn -= ((tn + vn + tstn) - len(dataset))
         split = [tn, vn, tstn]
@@ -80,7 +93,7 @@ class CariesRestorationDatamodule(LightningDataModule):
         return DataLoader(self.train_ds, self.hparams.batch_size, shuffle=True, num_workers=self.hparams.num_workers)
 
     def val_dataloader(self):
-        return DataLoader(self.val_ds, self.hparams.batch_size, shuffle=True, num_workers=self.hparams.num_workers)
+        return DataLoader(self.val_ds, self.hparams.batch_size, shuffle=False, num_workers=self.hparams.num_workers)
 
     def test_dataloader(self):
-        return DataLoader(self.test_ds, self.hparams.batch_size, shuffle=True, num_workers=self.hparams.num_workers)
+        return DataLoader(self.test_ds, self.hparams.batch_size, shuffle=False, num_workers=self.hparams.num_workers)

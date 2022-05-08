@@ -2,8 +2,12 @@ import json
 from pathlib import Path
 
 def to_coco(pred_dict, annotations):
-    with open(annotations, 'r') as f:
-        ann_file = json.load(f)
+    if type(annotations) == str or type(annotations) == Path:
+        with open(annotations, 'r') as f:
+            ann_file = json.load(f)
+    else:
+        ann_file = annotations
+
     if type(pred_dict) == str or type(pred_dict) == Path:
         with open(pred_dict, 'r') as f:
             preds = json.load(f)
