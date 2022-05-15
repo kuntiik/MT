@@ -102,13 +102,19 @@ class YoloV5Module(pl.LightningModule):
             weight_decay=self.hparams.weight_decay,
         )
 
+        # scheduler = {
+        #     "scheduler": torch.optim.lr_scheduler.ReduceLROnPlateau(
+        #         optimizer=optimizer,
+        #     ),
+        #     "monitor": "val/map_50",
+        #     "interval": "epoch",
+        #     "name": "lr",
+        #     "patience": 5
+        # }
         scheduler = {
-            "scheduler": torch.optim.lr_scheduler.ReduceLROnPlateau(
-                optimizer=optimizer,
-            ),
-            "monitor": "val/loss",
-            "interval": "epoch",
-            "name": "lr",
+            "scheduler" : torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 70, 5e-8),
+            "interval" : "epoch",
+            "name" : "lr"
         }
         return [optimizer], [scheduler]
 

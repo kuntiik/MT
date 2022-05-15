@@ -66,17 +66,19 @@ def prefilter_boxes(boxes, scores, labels, weights, thr):
                 warnings.warn("Zero area box skipped: {}.".format(box_part))
                 continue
 
+            # TODO size dependent scaling
             # [label, score, weight, model index, x1, y1, x2, y2]
-            # area = (x2 - x1) * 1068 * 847 * (y2 - y1)
-            # if area <= 32 ** 2:
-            #     w = weights[t][0]
-            # elif area > 32 ** 2 and area <= 96 **2:
-            #     w = weights[t][1]
-            # # else area > 96 **2:
-            # else:
-            #     w = weights[t][2]
-            # b = [int(label), float(score) * w, w, t, x1, y1, x2, y2]
-            b = [int(label), float(score) * weights[t], weights[t], t, x1, y1, x2, y2]
+            area = (x2 - x1) * 1068 * 847 * (y2 - y1)
+            if area <= 32 ** 2:
+                w = weights[t][0]
+            elif area > 32 ** 2 and area <= 96 **2:
+                w = weights[t][1]
+            # else area > 96 **2:
+            else:
+                w = weights[t][2]
+            b = [int(label), float(score) * w, w, t, x1, y1, x2, y2]
+
+            # b = [int(label), float(score) * weights[t], weights[t], t, x1, y1, x2, y2]
             if label not in new_boxes:
                 new_boxes[label] = []
             new_boxes[label].append(b)

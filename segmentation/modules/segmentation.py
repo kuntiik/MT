@@ -6,7 +6,6 @@ import torchvision.transforms as transforms
 from segmentation.utils.losses import *
 from torchmetrics import MeanMetric
 
-
 # from segmentation.modules import
 from segmentation.models.Unet import UNet
 
@@ -18,12 +17,16 @@ class SegmentationModule(LightningModule):
             num_layers: int = 5,
             features_start: int = 64,
             bilinear: bool = False,
+            loss_type = 'cse_dice',
+            threshold = 0.5
     ):
         super().__init__()
         self.save_hyperparameters()
         self.loss = nn.CrossEntropyLoss()
         self.iou_metrics = MeanMetric()
+        self.non_empty_iou_metrics = MeanMetric()
         self.dice_metric = MeanMetric()
+        self.loss_type = loss_type
 
         self.net = UNet(
             num_classes=num_classes,
@@ -37,17 +40,18 @@ class SegmentationModule(LightningModule):
 
     def training_step(self, batch, batch_nb):
         img, mask = batch
-        img = img.float()
-        mask = mask.long()
         out = self(img)
-        loss_val = self.loss(out, mask) + soft_dice_loss(out, mask)
+        if self.loss_type == 'cse_dice':
+            loss_val = self.loss(out, mask) + soft_dice_loss(out, mask)
+        elif self.loss_type == 'dice':
+            loss_val = soft_dice_loss(out, mask)
+        else:
+            loss_val = self.loss(out, mask)
         self.log('train/loss', loss_val)
         return loss_val
 
     def validation_step(self, batch, batch_idx):
         img, mask = batch
-        img = img.float()
-        mask = mask.long()
         out = self(img)
         loss_val = self.loss(out, mask) + soft_dice_loss(out, mask)
         self.log('val/loss', loss_val)
@@ -70,8 +74,30 @@ class SegmentationModule(LightningModule):
     #     self.log('val/epoch_loss', loss_val, prog_bar=True)
     #     log_dict = {"val_loss": loss_val}
     #     return {"log": log_dict, "val_loss": log_dict["val_loss"], "progress_bar": log_dict}
+    def predict_step(self, batch, batch_idx):
+        img, mask = batch
+        out = self(img)
+        return (out, mask)
+
+
+    def test_step(self, batch, batch_idx):
+        img, mask = batch
+        out = self(img)
+        iou_value = iou(out, mask, self.hparams.threshold)
+        mask_sum = torch.sum(mask, dim=(1,2)) > 0
+        self.non_empty_iou_metrics.update(iou_value[mask_sum])
+        self.iou_metrics.update(iou_value)
+        self.dice_metric.update(dice_values(out, mask, self.hparams.threshold))
+
+    def test_epoch_end(self, outs):
+        self.log('test/iou_non_empty', self.non_empty_iou_metrics)
+        self.log('test/iou_metrics', self.iou_metrics)
+        self.log('test/dice_metrics', self.dice_metric)
+
 
     def configure_optimizers(self):
-        opt = torch.optim.Adam(self.net.parameters(), lr=self.hparams.lr)
-        sch = {"scheduler" : torch.optim.lr_scheduler.ReduceLROnPlateau(opt), "monitor" : 'val/loss'}
+        # opt = torch.optim.Adam(self.net.parameters(), lr=self.hparams.lr)
+        opt = torch.optim.AdamW(self.net.parameters(), lr=self.hparams.lr)
+        # sch = {"scheduler" : torch.optim.lr_scheduler.ReduceLROnPlateau(opt), "monitor" : 'val/loss'}
+        sch = {"scheduler" : torch.optim.lr_scheduler.CosineAnnealingLR(opt, 40, 1e-7), "interval" : 'epoch', "name": 'lr'}
         return [opt], [sch]

@@ -18,19 +18,22 @@ class PredictionEval:
         self.map_params = params
 
     def load_data_coco_files(self, annotations_path, predictions_coco, train_val_names=None):
+        self.load_ground_truth(annotations_path, train_val_names)
+        self.load_predictions(predictions_coco)
 
+    def load_ground_truth(self, annotations_path, train_val_names=None):
         self.cocoGt = COCO(annotations_path)
         for image in self.cocoGt.imgs.values():
             self.img_name2id[image["file_name"]] = image["id"]
             self.img_id2name[image["id"]] = image["file_name"]
 
-        if type(predictions_coco) == dict and 'annotations' in predictions_coco.keys():
-            predictions_anns = predictions_coco['annotations']
-        else:
-            predictions_anns = predictions_coco
-        self.cocoDt = self.cocoGt.loadRes(predictions_anns)
-        self.cocoEval = COCOeval(self.cocoGt, self.cocoDt)
-        if train_val_names is not None:
+        #TODO this is not clean at all
+        if 'train_ids' in train_val_names.keys():
+            self.train_ids = train_val_names["train_ids"]
+            self.val_ids = train_val_names["val_ids"]
+            self.test_ids = train_val_names["test_ids"]
+
+        elif train_val_names is not None:
             if train_val_names["type"] == "id":
                 self.train_ids = train_val_names["train"]
                 self.val_ids = train_val_names["val"]
@@ -39,6 +42,15 @@ class PredictionEval:
                 self.train_ids = [self.img_name2id[name] for name in train_val_names["train"]]
                 self.val_ids = [self.img_name2id[name] for name in train_val_names["val"]]
                 self.tests_ids = [self.img_name2id[name] for name in train_val_names["test"]]
+
+    def load_predictions(self, predictions_coco):
+        if type(predictions_coco) == dict and 'annotations' in predictions_coco.keys():
+            predictions_anns = predictions_coco['annotations']
+        else:
+            predictions_anns = predictions_coco
+        self.cocoDt = self.cocoGt.loadRes(predictions_anns)
+        self.cocoEval = COCOeval(self.cocoGt, self.cocoDt)
+
 
     def default_queries(self):
         queries = [

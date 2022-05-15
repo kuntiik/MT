@@ -75,6 +75,7 @@ class DentalCaries(pl.LightningDataModule):
     ):
         super().__init__()
         self.save_hyperparameters(ignore=["model_type", "transforms"])
+        self.batch_size = batch_size
         mod = src.models
         for module in model_type.split("."):
             mod = getattr(mod, module)
@@ -98,7 +99,7 @@ class DentalCaries(pl.LightningDataModule):
     def train_dataloader(self):
         return self.model_type.train_dl(
             self.train_ds,
-            batch_size=self.hparams.batch_size,
+            batch_size=self.batch_size,
             num_workers=self.hparams.num_workers,
             shuffle=True
         )
@@ -106,7 +107,7 @@ class DentalCaries(pl.LightningDataModule):
     def val_dataloader(self: Optional[str] = None):
         return self.model_type.valid_dl(
             self.valid_ds,
-            batch_size=self.hparams.batch_size,
+            batch_size=self.batch_size,
             num_workers=self.hparams.num_workers,
             shuffle=False,
         )
@@ -114,7 +115,7 @@ class DentalCaries(pl.LightningDataModule):
     def test_dataloader(self: Optional[str] = None):
         return self.model_type.valid_dl(
             self.test_ds,
-            batch_size=self.hparams.batch_size,
+            batch_size=self.batch_size,
             num_workers=self.hparams.num_workers,
             shuffle=False,
         )

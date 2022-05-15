@@ -6,7 +6,7 @@ import pytorch_lightning as pl
 import torch.nn as nn
 from typing import List
 import torch
-from torch.optim import Adam
+from torch.optim import Adam, AdamW, SGD
 
 from src.metrics.coco_metric import COCOMetric, COCOMetricType
 from src.metrics.common import Metric
@@ -16,7 +16,7 @@ from torchmetrics import MaxMetric
 
 class MMDetModelAdapter(pl.LightningModule):
 
-    def __init__(self, model: nn.Module, learning_rate=1e-4, weight_decay=1e-6):
+    def __init__(self, model: nn.Module, learning_rate=1e-4, weight_decay=1e-6, optimizer='adamW'):
         super().__init__()
         self.save_hyperparameters(ignore=['model'])
         self.model = model
@@ -84,24 +84,42 @@ class MMDetModelAdapter(pl.LightningModule):
         self.finalize_metrics_pred(stage='pred')
 
     def configure_optimizers(self):
-        optimizer = Adam(
-            self.parameters(),
-            lr=self.hparams.learning_rate,
-            weight_decay=self.hparams.weight_decay,
-        )
-        scheduler = {
-            "scheduler": torch.optim.lr_scheduler.ReduceLROnPlateau(
-                optimizer=optimizer,
-            ),
-            "monitor": "val/loss",
-            "interval": "epoch",
-            "name": "lr",
-        }
-        return [optimizer], [scheduler]
+        def configure_optimizers(self):
 
-    def validation_epoch_end(self, outs):
-        self.finalize_metrics(stage='val')
-
+            if self.hparams.optimizer == "adam":
+                optimizer = Adam(
+                    self.parameters(),
+                    lr=self.hparams.learning_rate,
+                    weight_decay=self.hparams.weight_decay,
+                )
+            elif self.hparams.optimizer == "adamW":
+                optimizer = AdamW(
+                    self.parameters(),
+                    lr=self.hparams.learning_rate,
+                    weight_decay=self.hparams.weight_decay,
+                )
+            else:
+                optimizer = SGD(
+                    self.parameters(),
+                    lr=self.hparams.learning_rate,
+                    weight_decay=self.hparams.weight_decay,
+                )
+            # scheduler = {
+            #     "scheduler": torch.optim.lr_scheduler.ReduceLROnPlateau(
+            #         optimizer=optimizer,
+            #         factor=self.hparams.scheduler_factor,
+            #         patience=self.hparams.scheduler_patience,
+            #     ),
+            #     "monitor": "val/loss",
+            #     "interval": "epoch",
+            #     "name": "lr",
+            # }
+            scheduler = {
+                "scheduler": torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 70, 5e-8),
+                "interval": "epoch",
+                "name": "lr"
+            }
+            return [optimizer], [scheduler]
 
     def finalize_metrics(self, stage='val') -> None:
         metric_logs = self.map.finalize()

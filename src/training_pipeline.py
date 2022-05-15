@@ -75,7 +75,8 @@ def train(config: DictConfig):
         log.info("loaded pretrained weights")
 
     # TODO this is experimental setup
-    # bn2gn(model)
+    if config.module.get("group_norm"):
+        bn2gn(model)
 
     transforms_composer: TransformsComposer = hydra.utils.instantiate(config.transforms, _recursive_=False)
     train_transforms, val_transforms = transforms_composer.train_val_transforms()
@@ -99,6 +100,7 @@ def train(config: DictConfig):
 
     if config.get('train'):
         log.info("Starting training")
+        trainer.tune(model, datamodule=dm)
         trainer.fit(model=model, datamodule=dm)
     if config.get('test'):
         ckpt_path = "best"

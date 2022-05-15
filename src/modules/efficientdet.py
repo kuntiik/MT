@@ -7,7 +7,7 @@ import torch
 # from torchmetrics.detection.map import MAP
 
 import src.models.efficientdet as efficientdet
-from torch.optim import Adam, SGD
+from torch.optim import Adam, SGD, AdamW
 from effdet import DetBenchPredict, unwrap_bench
 
 from src.core.convertions import preds2dicts
@@ -23,6 +23,7 @@ class EfficientDetModule(pl.LightningModule):
             scheduler_patience=10,
             scheduler_factor=0.2,
             weight_decay=1e-6,
+            # batch_size=1
     ):
         super().__init__()
         self.save_hyperparameters(ignore=['model'])
@@ -107,21 +108,32 @@ class EfficientDetModule(pl.LightningModule):
                 lr=self.hparams.learning_rate,
                 weight_decay=self.hparams.weight_decay,
             )
+        elif self.hparams.optimizer == "adamW":
+            optimizer = AdamW(
+                self.parameters(),
+                lr=self.hparams.learning_rate,
+                weight_decay=self.hparams.weight_decay,
+            )
         else:
             optimizer = SGD(
                 self.parameters(),
                 lr=self.hparams.learning_rate,
                 weight_decay=self.hparams.weight_decay,
             )
+        # scheduler = {
+        #     "scheduler": torch.optim.lr_scheduler.ReduceLROnPlateau(
+        #         optimizer=optimizer,
+        #         factor=self.hparams.scheduler_factor,
+        #         patience=self.hparams.scheduler_patience,
+        #     ),
+        #     "monitor": "val/loss",
+        #     "interval": "epoch",
+        #     "name": "lr",
+        # }
         scheduler = {
-            "scheduler": torch.optim.lr_scheduler.ReduceLROnPlateau(
-                optimizer=optimizer,
-                factor=self.hparams.scheduler_factor,
-                patience=self.hparams.scheduler_patience,
-            ),
-            "monitor": "val/loss",
-            "interval": "epoch",
-            "name": "lr",
+            "scheduler" : torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 70, 5e-8),
+            "interval" : "epoch",
+            "name" : "lr"
         }
         return [optimizer], [scheduler]
 

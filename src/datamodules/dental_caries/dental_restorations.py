@@ -14,7 +14,7 @@ from albumentations.pytorch.transforms import ToTensorV2
 
 
 class COCOSegmentation(Dataset):
-    def __init__(self, img_root, ann_path, transforms=None):
+    def __init__(self, img_root, ann_path, transforms=None, apply_transforms=True):
         super().__init__()
         # self.transforms = transforms
         self.img_root = img_root if type(img_root) == str else Path(img_root)
@@ -22,8 +22,10 @@ class COCOSegmentation(Dataset):
         self.ids = list(sorted(self.coco.imgs.keys()))
         self.cat_id = self.coco.getCatIds(catNms=['restoration'])
         self.transforms = A.Compose(
-            [*transforms, *self._default_transforms((1068, 847))]) if transforms is not None else A.Compose(
-            [*self._default_transforms((1068, 847))])
+            [*self._default_transforms((1068, 847))]) if transforms is None else A.Compose(
+            [*transforms, *self._default_transforms((1068, 847))])
+        if not apply_transforms:
+            self.transforms = None
         # self.val_transforms = A.Compose([*self._default_transforms(1068, 847)])
 
     def _load_img(self, id: int) -> Image.Image:
@@ -56,7 +58,7 @@ class COCOSegmentation(Dataset):
         mask = self._load_mask(id)
         if self.transforms is not None:
             transformed = self.transforms(image=img, mask=mask)
-            img, mask = transformed['image'], transformed['mask']
+            img, mask = transformed['image'].float(), transformed['mask'].long()
         return img, mask
 
     def __len__(self) -> int:
@@ -64,7 +66,7 @@ class COCOSegmentation(Dataset):
 
 
 class CariesRestorationDatamodule(LightningDataModule):
-    def __init__(self, img_root, ann_path, batch_size, transforms=None, seed: int = 42, num_workers: int = 8,
+    def __init__(self, img_root, ann_path, batch_size, transforms=True, seed: int = 42, num_workers: int = 8,
                  data_split: Tuple[int, int, int] = [0.8, 0.2, 0.0]):
         super().__init__()
         self.save_hyperparameters()
@@ -80,12 +82,12 @@ class CariesRestorationDatamodule(LightningDataModule):
 
     def setup(self, stage : Optional[str] = None):
         tf, vf, tstf = self.hparams.data_split
-        dataset = COCOSegmentation(self.hparams.img_root, self.hparams.ann_path, self.train_transforms)
+        dataset = COCOSegmentation(self.hparams.img_root, self.hparams.ann_path, self.train_transforms, apply_transforms=self.hparams.transforms)
         tn, vn, tstn = int(tf * len(dataset)), int(vf * len(dataset)), int(tstf * len(dataset))
         tn -= ((tn + vn + tstn) - len(dataset))
         split = [tn, vn, tstn]
         self.train_ds, _, _ = random_split(dataset, split, generator=torch.Generator().manual_seed(self.hparams.seed))
-        dataset = COCOSegmentation(self.hparams.img_root, self.hparams.ann_path, None)
+        dataset = COCOSegmentation(self.hparams.img_root, self.hparams.ann_path, None,  apply_transforms=self.hparams.transforms)
         _, self.val_ds, self.test_ds = random_split(dataset, split,
                                                     generator=torch.Generator().manual_seed(self.hparams.seed))
 

@@ -33,13 +33,13 @@ def log_hyperparameters(
         p.numel() for p in model.parameters() if not p.requires_grad
     )
 
-    hparams["datamodule"] = config["datamodule"]
+    # hparams["datamodule"] = config["datamodule"]
     hparams["trainer"] = config["trainer"]
 
     if "seed" in config:
         hparams["seed"] = config["seed"]
-    if "callbacks" in config:
-        hparams["callbacks"] = config["callbacks"]
+    # if "callbacks" in config:
+    #     hparams["callbacks"] = config["callbacks"]
 
     # send hparams to all loggers
     if trainer.logger is not None:
