@@ -6,7 +6,7 @@ from omegaconf import OmegaConf
 import torch
 
 import src.transforms.transforms_composer
-from src.datamodules.dental_caries import DentalCaries
+from src.datamodules.dental import DentalCaries
 from src.transforms import TransformsComposer
 
 

@@ -1,5 +1,4 @@
-import torch
-from segmentation.utils.losses import *
+from src.utils.segmentation.losses import *
 import gc
 from tqdm import tqdm
 import kornia.morphology as KM

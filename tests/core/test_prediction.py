@@ -7,7 +7,7 @@ import torch
 from src.core import BaseRecord, ScoresRecordComponent, ImageRecordComponent, InstancesLabelsRecordComponent, \
     BBoxesRecordComponent, ClassMap, BBox, Prediction
 from src.data.random_splitter import SingleSplitSplitter
-from src.datamodules.dental_caries.dental_caries import DentalCariesParser
+from src.datamodules.dental.dental_caries import DentalCariesParser
 
 @pytest.fixture()
 def pred():

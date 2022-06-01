@@ -17,13 +17,14 @@ class COCOSegmentation(Dataset):
     def __init__(self, img_root, ann_path, transforms=None, apply_transforms=True):
         super().__init__()
         # self.transforms = transforms
-        self.img_root = img_root if type(img_root) == str else Path(img_root)
+        self.img_root = Path(img_root) if type(img_root) == str else img_root
         self.coco = COCO(ann_path)
         self.ids = list(sorted(self.coco.imgs.keys()))
         self.cat_id = self.coco.getCatIds(catNms=['restoration'])
-        self.transforms = A.Compose(
-            [*self._default_transforms((1068, 847))]) if transforms is None else A.Compose(
-            [*transforms, *self._default_transforms((1068, 847))])
+        # self.transforms = A.Compose(
+        #     [*self._default_transforms((1068, 847))]) if transforms is None else A.Compose(
+        #     [*transforms, *self._default_transforms((1068, 847))])
+        self.transforms = transforms
         if not apply_transforms:
             self.transforms = None
         # self.val_transforms = A.Compose([*self._default_transforms(1068, 847)])
@@ -65,29 +66,23 @@ class COCOSegmentation(Dataset):
         return len(self.ids)
 
 
-class CariesRestorationDatamodule(LightningDataModule):
-    def __init__(self, img_root, ann_path, batch_size, transforms=True, seed: int = 42, num_workers: int = 8,
+class DentalRestorations(LightningDataModule):
+    def __init__(self, img_root, ann_path, batch_size, train_transforms=None, val_transforms=None, transforms=True,
+                 seed: int = 42, num_workers: int = 8,
                  data_split: Tuple[int, int, int] = [0.8, 0.2, 0.0]):
         super().__init__()
         self.save_hyperparameters()
 
-        self.train_transforms = [
-            A.VerticalFlip(p=0.5),
-            A.HorizontalFlip(p=0.5),
-            A.Rotate(limit=10, p=0.3),
-            A.Affine(translate_percent=(-0.1, 0.1), p=0.5),
-            A.GaussianBlur(blur_limit=(7, 31), p=0.3),
-            A.RandomGamma(gamma_limit=(60, 140), p=0.3),
-        ]
-
-    def setup(self, stage : Optional[str] = None):
+    def setup(self, stage: Optional[str] = None):
         tf, vf, tstf = self.hparams.data_split
-        dataset = COCOSegmentation(self.hparams.img_root, self.hparams.ann_path, self.train_transforms, apply_transforms=self.hparams.transforms)
+        dataset = COCOSegmentation(self.hparams.img_root, self.hparams.ann_path, self.hparams.train_transforms,
+                                   apply_transforms=self.hparams.transforms)
         tn, vn, tstn = int(tf * len(dataset)), int(vf * len(dataset)), int(tstf * len(dataset))
         tn -= ((tn + vn + tstn) - len(dataset))
         split = [tn, vn, tstn]
         self.train_ds, _, _ = random_split(dataset, split, generator=torch.Generator().manual_seed(self.hparams.seed))
-        dataset = COCOSegmentation(self.hparams.img_root, self.hparams.ann_path, None,  apply_transforms=self.hparams.transforms)
+        dataset = COCOSegmentation(self.hparams.img_root, self.hparams.ann_path, self.hparams.val_transforms,
+                                   apply_transforms=self.hparams.transforms)
         _, self.val_ds, self.test_ds = random_split(dataset, split,
                                                     generator=torch.Generator().manual_seed(self.hparams.seed))
 

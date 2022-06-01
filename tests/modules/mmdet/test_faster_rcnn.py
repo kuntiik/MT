@@ -7,7 +7,7 @@ from src.transforms import Adapter
 import albumentations as A
 from albumentations.pytorch.transforms import ToTensorV2
 import hydra
-from src.datamodules.dental_caries import DentalCaries
+from src.datamodules.dental import DentalCaries
 
 
 @pytest.fixture()

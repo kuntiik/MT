@@ -1,5 +1,5 @@
 from pathlib import Path
-from src.datamodules.dental_caries.dental_restorations import COCOSegmentation
+from src.datamodules.dental.dental_restorations import COCOSegmentation
 
 def test_coco_segmentation_dataset():
         annotations_path = Path('/datagrid/personal/kuntluka/dental_rtg1/annotations.json')

@@ -276,6 +276,9 @@ class COCOeval:
         recall = -np.ones((T, K, A, M))
         scores = -np.ones((T, R, K, A, M))
 
+        num_tp = np.zeros((T, K, A, M))
+        num_fp = np.zeros((T, K, A, M))
+        num_fn = np.zeros((T, K, A, M))
         # create dictionary for future indexing
         _pe = self._paramsEval
         catIds = _pe.catIds if _pe.useCats else [-1]
@@ -350,6 +353,11 @@ class COCOeval:
                             pass
                         precision[t, :, k, a, m] = np.array(q)
                         scores[t, :, k, a, m] = np.array(ss)
+                        precision[t, :, k, a, m] = np.array(q)
+                        scores[t, :, k, a, m] = np.array(ss)
+                        num_tp[t, k, a, m] = np.sum(tp)
+                        num_fp[t, k, a, m] = np.sum(fp)
+                        num_fn[t, k, a, m] = npig - np.sum(tp)
         self.eval = {
             "params": p,
             "counts": [T, R, K, A, M],
@@ -357,6 +365,9 @@ class COCOeval:
             "precision": precision,
             "recall": recall,
             "scores": scores,
+            'num_tp': num_tp,
+            'num_fp': num_fp,
+            'num_fn': num_fn
         }
         toc = time.time()
         print("DONE (t={:0.2f}s).".format(toc - tic))

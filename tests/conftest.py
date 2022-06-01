@@ -10,9 +10,9 @@ from src.core import ClassMap
 from src.data.dataset import Dataset
 from src.data.parsers.pasacal_voc import VOCBBoxParser
 from src.data.random_splitter import RandomSplitter, SingleSplitSplitter
-from src.datamodules.dental_caries import DentalCaries
+from src.datamodules.dental import DentalCaries
 from src.core.record_components import *
-from src.datamodules.dental_caries.dental_caries import DentalCariesParser
+from src.datamodules.dental.dental_caries import DentalCariesParser
 
 
 @pytest.fixture()

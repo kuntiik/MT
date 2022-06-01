@@ -17,7 +17,7 @@ from pytorch_lightning.plugins import DDPPlugin
 from loguru import logger as log
 from pytorch_lightning.strategies import DDPStrategy
 
-from src.datamodules.dental_caries import DentalCaries
+from src.datamodules.dental import DentalCaries
 from src.transforms import TransformsComposer
 from src.utils.logger_utils import log_hyperparameters, finish
 

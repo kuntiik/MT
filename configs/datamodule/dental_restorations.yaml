@@ -1,0 +1,6 @@
+_target_ : src.datamodules.dental.DentalRestorations
+img_root : /datagrid/personal/kuntluka/dental_restorations/images
+ann_path : /datagrid/personal/kuntluka/dental_restorations/annotations.json
+batch_size : 1
+seed : ${seed}
+num_workers : 8

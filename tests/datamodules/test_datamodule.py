@@ -3,7 +3,7 @@ import torch
 
 from src.data.random_splitter import SingleSplitSplitter, RandomSplitter
 from src.data.record_collection import RecordCollection
-from src.datamodules.dental_caries.dental_caries import DentalCariesParser, DentalCaries
+from src.datamodules.dental.dental_caries import DentalCariesParser, DentalCaries
 from pathlib import Path
 from hydra.utils import instantiate
 import hydra

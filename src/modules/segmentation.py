@@ -1,18 +1,16 @@
-import torch
-from pytorch_lightning import LightningModule, seed_everything
-from torch.nn import functional as F
-import torch.nn as nn
-import torchvision.transforms as transforms
-from segmentation.utils.losses import *
 from torchmetrics import MeanMetric
+from pytorch_lightning import LightningModule
+import torch
+from src.utils.segmentation.losses import  *
+import torch.nn as nn
 
 # from segmentation.modules import
-from segmentation.models.Unet import UNet
+from src.models.segmentation.Unet import UNet
 
 class SegmentationModule(LightningModule):
     def __init__(
             self,
-            lr: float = 0.01,
+            learning_rate : float = 0.01,
             num_classes: int = 19,
             num_layers: int = 5,
             features_start: int = 64,
@@ -97,7 +95,7 @@ class SegmentationModule(LightningModule):
 
     def configure_optimizers(self):
         # opt = torch.optim.Adam(self.net.parameters(), lr=self.hparams.lr)
-        opt = torch.optim.AdamW(self.net.parameters(), lr=self.hparams.lr)
+        opt = torch.optim.AdamW(self.net.parameters(), lr=self.hparams.learning_rate)
         # sch = {"scheduler" : torch.optim.lr_scheduler.ReduceLROnPlateau(opt), "monitor" : 'val/loss'}
         sch = {"scheduler" : torch.optim.lr_scheduler.CosineAnnealingLR(opt, 40, 1e-7), "interval" : 'epoch', "name": 'lr'}
         return [opt], [sch]

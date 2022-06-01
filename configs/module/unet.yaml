@@ -1,0 +1,10 @@
+
+img_size : [1068,847]
+model:
+  _target_ : src.modules.segmentation.SegmentationModule
+  learning_rate : 1e-3
+  num_classes : 2
+  num_layers : 5
+  bilinear : False
+  loss_type : 'cse_dice'
+  threshold : 0.5

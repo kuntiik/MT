@@ -10,5 +10,6 @@ model:
       _target_ : src.models.mmdet.retinanet.backbones.${module.backbone}
       pretrained : 1
     num_classes : 2
+  optimizer : adamW
   learning_rate : 1e-4
 #    img_size : ${module.img_size}

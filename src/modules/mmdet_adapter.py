@@ -73,6 +73,9 @@ class MMDetModelAdapter(pl.LightningModule):
     def test_epoch_end(self, outs):
         self.finalize_metrics(stage='test')
 
+    def validation_epoch_end(self, outs):
+        self.finalize_metrics(stage='val')
+
     def predict_step(self, batch, batch_idx):
         xb, records = batch
         raw_preds = self(return_loss=False, rescale=False, **xb)
@@ -84,42 +87,40 @@ class MMDetModelAdapter(pl.LightningModule):
         self.finalize_metrics_pred(stage='pred')
 
     def configure_optimizers(self):
-        def configure_optimizers(self):
-
-            if self.hparams.optimizer == "adam":
-                optimizer = Adam(
-                    self.parameters(),
-                    lr=self.hparams.learning_rate,
-                    weight_decay=self.hparams.weight_decay,
-                )
-            elif self.hparams.optimizer == "adamW":
-                optimizer = AdamW(
-                    self.parameters(),
-                    lr=self.hparams.learning_rate,
-                    weight_decay=self.hparams.weight_decay,
-                )
-            else:
-                optimizer = SGD(
-                    self.parameters(),
-                    lr=self.hparams.learning_rate,
-                    weight_decay=self.hparams.weight_decay,
-                )
-            # scheduler = {
-            #     "scheduler": torch.optim.lr_scheduler.ReduceLROnPlateau(
-            #         optimizer=optimizer,
-            #         factor=self.hparams.scheduler_factor,
-            #         patience=self.hparams.scheduler_patience,
-            #     ),
-            #     "monitor": "val/loss",
-            #     "interval": "epoch",
-            #     "name": "lr",
-            # }
-            scheduler = {
-                "scheduler": torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 70, 5e-8),
-                "interval": "epoch",
-                "name": "lr"
-            }
-            return [optimizer], [scheduler]
+        if self.hparams.optimizer == "adam":
+            optimizer = Adam(
+                self.parameters(),
+                lr=self.hparams.learning_rate,
+                weight_decay=self.hparams.weight_decay,
+            )
+        elif self.hparams.optimizer == "adamW":
+            optimizer = AdamW(
+                self.parameters(),
+                lr=self.hparams.learning_rate,
+                weight_decay=self.hparams.weight_decay,
+            )
+        else:
+            optimizer = SGD(
+                self.parameters(),
+                lr=self.hparams.learning_rate,
+                weight_decay=self.hparams.weight_decay,
+            )
+        # scheduler = {
+        #     "scheduler": torch.optim.lr_scheduler.ReduceLROnPlateau(
+        #         optimizer=optimizer,
+        #         factor=self.hparams.scheduler_factor,
+        #         patience=self.hparams.scheduler_patience,
+        #     ),
+        #     "monitor": "val/loss",
+        #     "interval": "epoch",
+        #     "name": "lr",
+        # }
+        scheduler = {
+            "scheduler": torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 70, 5e-8),
+            "interval": "epoch",
+            "name": "lr"
+        }
+        return [optimizer], [scheduler]
 
     def finalize_metrics(self, stage='val') -> None:
         metric_logs = self.map.finalize()

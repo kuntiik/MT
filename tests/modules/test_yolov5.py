@@ -3,7 +3,7 @@ import hydra
 import pytorch_lightning as pl
 
 # @pytest.mark.parametrize('module', ['yolov5'])
-from src.datamodules.dental_caries import DentalCaries
+from src.datamodules.dental import DentalCaries
 from src.transforms import TransformsComposer
 
 

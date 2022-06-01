@@ -7,6 +7,13 @@ def iou_binary(preds, targets):
     iou = (intersection + 1) / (union + 1)
     return iou
 
+def dice_binary(preds, targets):
+    intersection = torch.sum(torch.logical_and(preds, targets), dim=(1,2))
+    pred_size = torch.sum(preds, dim=(1,2))
+    target_size = torch.sum(targets, dim=(1,2))
+    dice_coeff = ((2 * intersection + 1)/ (pred_size + target_size + 1))
+    return dice_coeff
+
 
 def iou(preds, targets, threshold=0.5):
     preds_prob = F.softmax(preds, 1)
@@ -15,6 +22,17 @@ def iou(preds, targets, threshold=0.5):
     union = torch.sum(torch.logical_or(preds_map[:, 1, ...], targets), dim=(1,2))
     iou = (intersection + 1) / (union + 1)
     return iou
+
+def get_tp_fp(preds, targets, threshold=0.5):
+    preds_prob = F.softmax(preds, 1)
+    preds_map = preds_prob > threshold
+    tp = torch.sum(torch.logical_and(preds_map[:, 1, ...], targets), dim=(1,2))
+    # union = torch.sum(torch.logical_or(preds_map[:, 1, ...], targets), dim=(1,2))
+    fp = torch.sum(torch.logical_and(preds_map[:,1, ...], ~targets), dim=(1,2))
+    fn = torch.sum(torch.logical_and(~preds_map[:,1, ...], targets), dim=(1,2))
+
+    return tp, fp, fn
+
 
 def dice_values(preds, targets, threshold=0.5):
     preds_prob = F.softmax(preds, dim=1)
