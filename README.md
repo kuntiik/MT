@@ -20,7 +20,11 @@ This project relies on many external dependencies. The main dependencies are as 
 - conda activate detection
 ```
 ## How to run
-You can train a model with the default setting by `python train.py`. 
+- You can train a model with the default setting by `python train.py`. 
+- To test a model specify the path to model weights either by command line or in module.yaml file and run `python test.py` this will run tests on the test dataset and report the metrics defined by the user (by default mean average precision)
+- Model inference is defined for every module. We usually convert those into a .json file (this format is required to do the ensembling). The conversion and prediction can be done either by `scripts/make_and_save_preds.py`  or by one of the jupyter notebooks `predict.ipynb` or `predict_batches.ipynb`.
+- Model evaulation is done by class in 'evaluation/prediction_evaluation.py'. We support evaulatuion for predictions in .json files or in COCO format. An example how to evaluate predictions is in `predict.ipynb` notebook.
+- Ensembling is done by one of the following methods: Weighted Boxes Fusion, Non-Maximal Weighted, Non-Maximal suppression. First convert predictions of all models to .json files. Ensembling is handles by a class defined in `evaluation/ensembling.py`. For example of use see `ensemble.ipynb` file in `notebooks` folder.
 
 ## Project structure
 
@@ -77,12 +81,6 @@ Parameters of PyTorch-Lightning trainer are set here. The settings include the n
 #### Callbacks
 Here you define callbacks that will be passed to PyTorch-Lightning. You can PyTorch-Lightning callbacks or instantiate your own callbacks.
 
-## Creating predictions
-Model inference is defined for every module. We usually convert those into a .json file (this format is required to do the ensembling). The conversion and prediction can be done either by `scripts/make_and_save_preds.py`  or by one of the jupyter notebooks `predict.ipynb` or `predict_batches.ipynb`.
-
-## Ensembling
-Ensembling is done by one of the following methods: Weighted Boxes Fusion, Non-Maximal Weighted, Non-Maximal suppression. First convert predictions of all models to .json files. Ensembling is done by class defined in `evaluation/ensembling.py`. For example of use see `ensemble.ipynb` file in `notebooks` folder.
-
 ## Hyper-parameter search
 This framework supports hyper-parameter search powered by Optuna. Optuna is an optimization toolbox that uses methods such as Tree-structured Parzen Estimator to propose hyper-parameters to use in the next trial. The history of runs is kept in SQL database. You can optimize multiple computers, even multiple nodes, if you specify the path to your SQL storage. 
 There are multiple options for how to use optuna by this framework.
@@ -104,5 +102,7 @@ There are multiple options for how to use optuna by this framework.
  In this setting, optuna launches a single optimization process. You can run this file multiple times to get faster optimization results. The scaling of the number of computers should have a near-linear impact on search time. If you run this on multiple nodes, you need to provide a database that is accessible to all nodes.
 
 ### Merge dataset from CVAT
-Merging of multiple datset from CVAT is supported. To merge dataset from CVAT: Export  all cvat tasks in the COCO format. Tasks are merged by merge_dataset.ipynb script, where you select path to tasks and target location
+Merging of multiple datset from CVAT is supported. To merge dataset from CVAT: Export  all cvat tasks in the COCO format. Tasks are merged by `merge_dataset.ipynb` script, where you select path to tasks and target location
 
+### FiftyOne visualization
+The dataset can be visualized by VoxelFiftyone. This is done by `fiftyone.ipynb` jupyter notebook. Please note, that fiftyone is not dependency (since it is not compatible with our environment on CMP server). To load prediction prepare them in .json format and load them by function in the notebook.
