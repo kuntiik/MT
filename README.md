@@ -8,8 +8,8 @@
 </div>
 
 ## Introduction 
-This object detection framework was made for dental caries detection from X-ray images. Despite its purpose, it can be modified to serve as a general object detection framework. <br />
-It was inspired by the IceVision (https://github.com/airctic/icevision) library, and part of their code was inherited. This framework supports implemented detection models as well as support for multiple external libraries such as MMDet or Ultralytics. We provide functions to convert data to the format required by those libraries. 
+This object detection framework was created for dental caries detection from X-ray images. Despite its purpose, it can be modified to serve as a general object detection framework. <br />
+It was inspired by the IceVision (https://github.com/airctic/icevision) library, and part of their code was inherited. This framework supports self-implemented detection models as well as models from multiple external libraries such as MMDet or Ultralytics. We provide functions to convert data to the format required by those libraries. 
 
 
 ## How to install
@@ -20,8 +20,7 @@ This project relies on many external dependencies. The main dependencies are as 
 - conda activate detection
 ```
 ## How to run
-You can run the project with the default setting by `python train.py`. 
-
+You can train a model with the default setting by `python train.py`. 
 
 ## Project structure
 
@@ -78,6 +77,11 @@ Parameters of PyTorch-Lightning trainer are set here. The settings include the n
 #### Callbacks
 Here you define callbacks that will be passed to PyTorch-Lightning. You can PyTorch-Lightning callbacks or instantiate your own callbacks.
 
+## Creating predictions
+Model inference is defined for every module. We usually convert those into a .json file (this format is required to do the ensembling). The conversion and prediction can be done either by `scripts/make_and_save_preds.py`  or by one of the jupyter notebooks `predict.ipynb` or `predict_batches.ipynb`.
+
+## Ensembling
+Ensembling is done by one of the following methods: Weighted Boxes Fusion, Non-Maximal Weighted, Non-Maximal suppression. First convert predictions of all models to .json files. Ensembling is done by class defined in `evaluation/ensembling.py`. For example of use see `ensemble.ipynb` file in `notebooks` folder.
 
 ## Hyper-parameter search
 This framework supports hyper-parameter search powered by Optuna. Optuna is an optimization toolbox that uses methods such as Tree-structured Parzen Estimator to propose hyper-parameters to use in the next trial. The history of runs is kept in SQL database. You can optimize multiple computers, even multiple nodes, if you specify the path to your SQL storage. 

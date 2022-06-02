@@ -1,6 +1,5 @@
 import torch
-from ensembling_search import *
-import ensembling_search
+from src.evaluation.ensembling import *
 from tqdm import tqdm
 import argparse
 
