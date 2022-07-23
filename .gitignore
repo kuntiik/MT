@@ -1,0 +1,12 @@
+wandb
+data
+checkpoints
+outputs
+lightning_logs
+__pycache__
+*.ipynb
+!./**/*.ipynb
+.idea/
+.vscode/
+samples/
+results/
