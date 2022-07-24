@@ -1,7 +1,14 @@
+
+import sys
+sys.path.append('..')
 import optuna
 from pathlib import Path
 import json
 
+from src.evaluation.prediction_evaluation import PredictionEval
+from src.utils.conver_to_coco import to_coco
+
+from src.evaluation.ensembling import BoxesEnsemble
 
 class Objective:
     def __init__(self, boxes_ensemble, ensemble_method='wbf', weight_area=False):
@@ -26,13 +33,47 @@ class Objective:
         return boxesensemble.evaluate_ensemble(weights, threshold, ensemble_method=self.ensemble_method)
 
 
+def normalize_confidences(preds, ann_path):
+    with open(ann_path, 'r') as f:
+        ann_file = json.load(f)
+
+    confidences = []
+    eval = PredictionEval()
+    for pred in preds:
+        preds_coco, names = to_coco(pred, ann_file)
+        eval.load_data_coco_files(ann_path, preds_coco, names)
+        # _, _, _, confidence = eval.precision_by_iou(stage='valid')
+        confidence = eval.get_conf()
+        confidences.append(confidence)
+
+    preds_normalized = []
+    max_conf = max(confidences)
+
+    for pred, confidence in zip(preds, confidences):
+        pred_n = {}
+        for img_name, values in pred.items():
+            pred_n[img_name] = values
+            for c in pred_n[img_name]['scores']:
+                c *= (max_conf/confidence)
+        preds_normalized.append((pred_n))
+        # pred_n = {}
+        # pred_n['categories'] = pred['categories']
+        # pred_n['images'] = pred['images']
+        # pred_n['annotations'] = []
+        # for ann in pred['annotations']:
+        #     ann_new = ann
+        #     ann_new['confidence'] *= (max_conf / confidence)
+        #     pred_n['annotations'].append(ann_new)
+    return preds_normalized, confidences
+
 
 if __name__ == '__main__':
 
     ############################################
     # TODO change this to be modifiable from the command line
-    pred_path = Path('predictions_non_nms/yolov5/medium')
-    ann_path = Path('/datagrid/personal/kuntluka/dental_rtg3/annotations.json')
+    pred_path = Path('../ens_search_all6')
+    # pred_path = Path('../ens_test')
+    ann_path = Path('/datagrid/personal/kuntluka/dental_rtg3/annotations6.json')
 
     preds = list(pred_path.iterdir())
     preds = [pred.name for pred in preds]
@@ -46,18 +87,20 @@ if __name__ == '__main__':
         with open(pred_path / pred_name, 'r') as f:
             preds_dicts.append(json.load(f))
 
-    with open('metadata4000.json', 'r') as f:
+    preds_dicts_normalized, confidences = normalize_confidences(preds_dicts, ann_path)
+
+    with open('../metadata4000.json', 'r') as f:
         meta_data = json.load(f)
 
-    boxesensemble = ensembling_search.BoxesEnsemble(meta_data, preds_dicts, ann_path, None)
+    boxesensemble = BoxesEnsemble(meta_data, preds_dicts_normalized, ann_path, None)
     boxesensemble.load_pred_eval(ann_path, meta_data)
     ###########################################
     study = optuna.create_study(
         direction='maximize',
         storage="sqlite:///ens_search_yolo_m.db",
-        study_name='ens_search_wbf_yolo_non_nms'
+        study_name='ens_search_61'
     )
-    study.optimize(Objective(boxesensemble, weight_area=False, ensemble_method='wbf'), n_trials=3000)
+    study.optimize(Objective(boxesensemble, weight_area=False, ensemble_method='wbf'), n_trials=5000)
     print("Number of finished trials: {}".format(len(study.trials)))
     print("Best trial: ")
     trial = study.best_trial
