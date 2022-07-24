@@ -1,3 +1,5 @@
+from typing import Dict, List, Union
+
 import numpy as np
 from src.evaluation.pycocotools.coco import COCO
 from src.evaluation.pycocotools.cocoeval import COCOeval, Params
@@ -18,16 +20,18 @@ class PredictionEval:
         self.map_params = params
 
     def load_data_coco_files(self, annotations_path, predictions_coco, train_val_names=None):
+        """Loads both predictions and ground truth. The data should be in the COCO format"""
         self.load_ground_truth(annotations_path, train_val_names)
         self.load_predictions(predictions_coco)
 
-    def load_ground_truth(self, annotations_path, train_val_names=None):
+    def load_ground_truth(self, annotations_path : str, train_val_names=None) -> None:
+        """Loads ground truth annotations given by annotations path"""
         self.cocoGt = COCO(annotations_path)
         for image in self.cocoGt.imgs.values():
             self.img_name2id[image["file_name"]] = image["id"]
             self.img_id2name[image["id"]] = image["file_name"]
 
-        #TODO this is not clean at all
+        # TODO this is not clean at all
         if 'train_ids' in train_val_names.keys():
             self.train_ids = train_val_names["train_ids"]
             self.val_ids = train_val_names["val_ids"]
@@ -43,7 +47,8 @@ class PredictionEval:
                 self.val_ids = [self.img_name2id[name] for name in train_val_names["val"]]
                 self.tests_ids = [self.img_name2id[name] for name in train_val_names["test"]]
 
-    def load_predictions(self, predictions_coco):
+    def load_predictions(self, predictions_coco: Union[Dict, List]) -> None:
+        """Loads predictions of a model in the COCO format."""
         if type(predictions_coco) == dict and 'annotations' in predictions_coco.keys():
             predictions_anns = predictions_coco['annotations']
         else:
@@ -51,105 +56,72 @@ class PredictionEval:
         self.cocoDt = self.cocoGt.loadRes(predictions_anns)
         self.cocoEval = COCOeval(self.cocoGt, self.cocoDt)
 
-
-    def default_queries(self):
-        queries = [
-            {"ap": 1},
-            {"ap": 1, "iouThr": 0.1, "areaRng": "all", "maxDets": 100},
-            {"ap": 1, "iouThr": 0.3, "areaRng": "all", "maxDets": 100},
-            {"ap": 1, "iouThr": 0.5, "areaRng": "all", "maxDets": 100},
-            {"ap": 1, "iouThr": 0.7, "areaRng": "all", "maxDets": 100},
-            {"ap": 1, "iouThr": 0.9, "areaRng": "all", "maxDets": 100},
-            {"ap": 1, "iouThr": 0.5, "areaRng": "small", "maxDets": 100},
-            {"ap": 1, "iouThr": 0.5, "areaRng": "medium", "maxDets": 100},
-            {"ap": 1, "iouThr": 0.5, "areaRng": "large", "maxDets": 100},
-        ]
+    @staticmethod
+    def default_queries(recall: bool = False):
+        """Returns default queries for AP if recall is set to False, otherwise for AR"""
+        if recall:
+            queries = [
+                {"ap": 0, "maxDets": 100},
+                {"ap": 0, "iouThr": 0.5, "areaRng": "all", "maxDets": 10},
+                {"ap": 0, "iouThr": 0.5, "areaRng": "all", "maxDets": 100},
+                {"ap": 0, "iouThr": 0.75, "areaRng": "all", "maxDets": 100},
+                {"ap": 0, "iouThr": 0.5, "areaRng": "small", "maxDets": 100},
+                {"ap": 0, "iouThr": 0.5, "areaRng": "medium", "maxDets": 100},
+                {"ap": 0, "iouThr": 0.5, "areaRng": "large", "maxDets": 100},
+            ]
+        else:
+            queries = [
+                {"ap": 1},
+                {"ap": 1, "iouThr": 0.3, "areaRng": "all", "maxDets": 100},
+                {"ap": 1, "iouThr": 0.5, "areaRng": "all", "maxDets": 100},
+                {"ap": 1, "iouThr": 0.75, "areaRng": "all", "maxDets": 100},
+                {"ap": 1, "iouThr": 0.5, "areaRng": "small", "maxDets": 100},
+                {"ap": 1, "iouThr": 0.5, "areaRng": "medium", "maxDets": 100},
+                {"ap": 1, "iouThr": 0.5, "areaRng": "large", "maxDets": 100},
+            ]
         return queries
 
-    def get_latex_table_recall(self, name="", stages=['test']):
-        queries = [
-            # {"ap": 0, "iouThr": 0.5, "areaRng": "all", "maxDets": 1},
-            {"ap" : 0, "maxDets" : 100},
-            {"ap": 0, "iouThr": 0.5, "areaRng": "all", "maxDets": 10},
-            {"ap": 0, "iouThr": 0.5, "areaRng": "all", "maxDets": 100},
-            {"ap": 0, "iouThr": 0.75, "areaRng": "all", "maxDets": 100},
-            {"ap": 0, "iouThr": 0.5, "areaRng": "small", "maxDets": 100},
-            {"ap": 0, "iouThr": 0.5, "areaRng": "medium", "maxDets": 100},
-            {"ap": 0, "iouThr": 0.5, "areaRng": "large", "maxDets": 100},
-        ]
-
+    def get_latex_table(self, name: str = "", stage: str = 'test', recall: bool = False):
+        """Generates row of latex table with results for given stage. Recall parameter sets if values will
+         be for AP or AR. Name sets the first column of the latex row.
+        """
+        queries = self.default_queries(recall)
         text = ""
-        if 'val' in stages:
-            val_results = self.evaluate_map(queries, stage="val", verbose=False)
-            val_results = [round(res, 3) for res in val_results]
-        if 'train' in stages:
-            train_results = self.evaluate_map(queries, stage="train", verbose=False)
-            train_results = [round(res, 3) for res in train_results]
-        if 'test' in stages:
-            test_results = self.evaluate_map(queries, stage="test", verbose=False)
-            test_results = [round(res, 3) for res in test_results]
-            text = f"""{name} & {test_results[0]}& {test_results[1]} & {test_results[2]} & {test_results[3]} & {test_results[4]} & {test_results[5]} & {test_results[5]} \\ \hline"""
+        results = self.evaluate_map(queries, stage=stage, verbose=False)
+        results = [round(res, 3) for res in results]
+        if recall:
+            text = f"""{name} & {results[0]}& {results[1]} & {results[2]} & {results[3]} & {results[4]} & {results[5]} \\ \hline"""
+        else:
+            text = f"""{name} & {results[0]}& {results[1]} & {results[2]} & {results[3]} & {results[4]} & {results[5]} & {results[6]} \\ \hline"""
         return text
 
+    # def get_data(self, name):
+    #     text = self.get_latex_table(name=name, stages=['test'])
+    #     text_recall = self.get_latex_table_recall(name=name, stages=['test'])
+    #     precisions = self.precision_by_iou(stage="test")
+    #     return text, precisions, text_recall
 
-    def get_latex_table(self,name="", stages=['test']):
-        queries = [
-            {"ap": 1},
-            {"ap": 1, "iouThr": 0.3, "areaRng": "all", "maxDets": 100},
-            {"ap": 1, "iouThr": 0.5, "areaRng": "all", "maxDets": 100},
-            {"ap": 1, "iouThr": 0.75, "areaRng": "all", "maxDets": 100},
-            {"ap": 1, "iouThr": 0.5, "areaRng": "small", "maxDets": 100},
-            {"ap": 1, "iouThr": 0.5, "areaRng": "medium", "maxDets": 100},
-            {"ap": 1, "iouThr": 0.5, "areaRng": "large", "maxDets": 100},
-        ]
-
-        text = ""
-        if 'val' in stages:
-            val_results = self.evaluate_map(queries, stage="val", verbose=False)
-            val_results = [round(res, 3) for res in val_results]
-        if 'train' in stages:
-            train_results = self.evaluate_map(queries, stage="train", verbose=False)
-            train_results = [round(res, 3) for res in train_results]
-        if 'test' in stages:
-            test_results = self.evaluate_map(queries, stage="test", verbose=False)
-            test_results = [round(res, 3) for res in test_results]
-            text = f"""{name} & {test_results[0]}& {test_results[1]} & {test_results[2]} & {test_results[3]} & {test_results[4]} & {test_results[5]} & {test_results[6]} \\ \hline"""
-
-        # text = f"""stage  & AP & AP@.3 & AP@.5 & AP@.75 & AP@.5_S & AP@.5_M & AP@.5_L \\ \hline
-        # training & {train_results[0]}& {train_results[1]} & {train_results[2]} & {train_results[3]}
-        # & {train_results[4]} & {train_results[5]} & {train_results[6]} \\hline
-        # validation & {val_results[0]}& {val_results[1]} & {val_results[2]} & {val_results[3]}
-        # & {val_results[4]} & {val_results[5]} & {val_results[6]} \\hline
-        # """
-        return text
-
-    def get_data(self, name):
-        text = self.get_latex_table(name=name, stages=['test'])
-        text_recall = self.get_latex_table_recall(name=name, stages=['test'])
-        precisions = self.precision_by_iou(stage="test")
-        return text, precisions, text_recall
-
-
-    def indices_by_stage(self, stage):
-        evaluate_imgs = []
+    def indices_by_stage(self, stage: str):
+        """Get image indices corresponding to given stage"""
         if stage == "val":
-            evaluate_imgs = self.val_ids
+            img_ids = self.val_ids
         elif stage == "train":
-            evaluate_imgs = self.train_ids
+            img_ids = self.train_ids
         elif stage == "test":
-            evaluate_imgs = self.test_ids
+            img_ids = self.test_ids
         else:  # stage == 'all':
-            evaluate_imgs = list(self.img_id2name.keys())
-        return evaluate_imgs
+            img_ids = list(self.img_id2name.keys())
+        return img_ids
 
-    def evaluate_map(self, queries, stage="all", summary=False, verbose=True):
-        evaluate_imgs = self.indices_by_stage(stage)
-
-        tmp_map_params = self.map_params
-        tmp_map_params.imgIds = evaluate_imgs
-        self.cocoEval.params = tmp_map_params
+    def evaluate_by_stage(self, stage: str):
+        """Evaluates the loaded data for the given stage"""
+        self.cocoEval.params.imgIds = self.indices_by_stage(stage)
         self.cocoEval.evaluate()
         self.cocoEval.accumulate()
+
+    def evaluate_map(self, queries: List[Dict], stage: str = "all", summary: bool = False, verbose: bool = True):
+        """Evaluates AP for given queries on given stage."""
+        self.evaluate_by_stage(stage)
         results = []
         for query in queries:
             if verbose:
@@ -159,50 +131,48 @@ class PredictionEval:
             self.cocoEval.summarize()
         return results
 
-    def precision_by_iou(self, iouThr=0.5, stage="all", areRng="all"):
-        evaluate_imgs = self.indices_by_stage(stage)
-
+    def results_maximizing_fscore(self, iouThr: float = 0.5, stage: str = "all", areRng: str = "all",
+                                  decimals: int = 3) -> dict:
+        """Returns precision, recall, F-score and confidence for the highest possible F-score on the given stage."""
         area_idx = self.cocoEval.params.area_str2idx(areRng)
         iou_idx = np.where(self.cocoEval.params.iouThrs == iouThr)[0][0]
-
-        self.cocoEval.params.imgIds = evaluate_imgs
-        self.cocoEval.evaluate()
-        self.cocoEval.accumulate()
+        self.evaluate_by_stage(stage)
         precisions = self.cocoEval.eval["precision"][iou_idx, :, 0, area_idx, 2]
-        recalls = np.linspace(0,1,101)
+        recalls = np.linspace(0, 1, 101)
         confidences = self.cocoEval.eval["scores"][iou_idx, :, 0, area_idx, 2]
-        f1_score = [(p*r)/(p+r)*2 for p,r in zip(precisions, recalls)]
-        best_idx = np.argmax(f1_score)
-        text = f"""{round(precisions[best_idx],3)} & {round(recalls[best_idx],3)} & {round(f1_score[best_idx],3)} & {round(confidences[best_idx],3)}"""
+        fscore = [(p * r) / (p + r) * 2 for p, r in zip(precisions, recalls)]
+        best_idx = np.argmax(fscore)
+        return {
+            'precision': round(precisions[best_idx], decimals),
+            'recall': round(recalls[best_idx], decimals),
+            'fscore': round(fscore[best_idx], decimals),
+            'confidence': round(confidences[best_idx], decimals),
+        }
+
+    def results_latex_table(self, iouThr=0.5, stage="all", areRng="all") -> str:
+        """Generates row of latex table for results maximizing F-score"""
+        results = self.results_maximizing_fscore(iouThr, stage, areRng, 3)
+        text = f"""{results['precision']} & {results['recall']} & {results['fscore']} & {results['confidence']}"""
         return text
 
     def precision_recall_score(self, iouThr=0.5, stage='all', areaRng='all'):
-        evaluate_imgs = self.indices_by_stage(stage)
         area_idx = self.cocoEval.params.area_str2idx(areaRng)
         iou_idx = np.where(self.cocoEval.params.iouThrs == iouThr)[0][0]
-
-        self.cocoEval.params.imgIds = evaluate_imgs
-        self.cocoEval.evaluate()
-        self.cocoEval.accumulate()
+        self.evaluate_by_stage(stage)
         precisions = self.cocoEval.eval["precision"][iou_idx, :, 0, area_idx, 2]
-        recalls = np.linspace(0,1,101)
+        recalls = np.linspace(0, 1, 101)
         confidences = self.cocoEval.eval["scores"][iou_idx, :, 0, area_idx, 2]
         return precisions, recalls, confidences
 
-    def map_query(self, iouThr=0.5, stage='all', areaRng='all'):
-        evaluate_imgs = self.indices_by_stage(stage)
-        area_idx = self.cocoEval.params.area_str2idx(areaRng)
-        iou_idx = np.where(self.cocoEval.params.iouThrs == iouThr)[0][0]
-        self.cocoEval.params.imgIds = evaluate_imgs
-        self.cocoEval.evaluate()
-        self.cocoEval.accumulate()
+    def map_query(self, iouThr: float = 0.5, stage: str = 'all', areaRng: str = 'all'):
+        """Returns AP for given IOU threshold on the given stage for predictions with specified area."""
+        self.evaluate_by_stage(stage)
         query = {"ap": 1, "iouThr": iouThr, "areaRng": areaRng, "maxDets": 100}
         return self.cocoEval._summarize(**query, doprint=False)
 
-    def evaluate_img_by_name(self, img_name):
+    def evaluate_img_by_name(self, img_name: str):
         self.cocoEval.params.imgIds = [self.img_name2id[img_name]]
         self.cocoEval.evaluate()
         self.cocoEval.accumulate()
         query = {"ap": 1, "iouThr": 0.5, "areaRng": 'all', "maxDets": 100}
-        # query = {"ap": 1},
         return self.cocoEval._summarize(**query, doprint=False)
