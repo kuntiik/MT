@@ -171,7 +171,8 @@ def weighted_boxes_fusion(
         iou_thr=0.55,
         skip_box_thr=0.0,
         conf_type='avg',
-        allows_overflow=False
+        allows_overflow=False,
+        **kwargs
 ):
     '''
     :param boxes_list: list of boxes predictions from each model, each box is 4 numbers.
@@ -188,6 +189,7 @@ def weighted_boxes_fusion(
         'box_and_model_avg': box and model wise hybrid weighted average,
         'absent_model_aware_avg': weighted average that takes into account the absent model.
     :param allows_overflow: false if we want confidence score not exceed 1.0
+    :param kwargs: to ensure compatability with snms calling
 
     :return: boxes: boxes coordinates (Order of boxes: x1, y1, x2, y2).
     :return: scores: confidence scores

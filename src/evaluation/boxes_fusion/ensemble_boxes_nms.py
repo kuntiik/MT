@@ -218,7 +218,7 @@ def nms_method(boxes, scores, labels, method=3, iou_thr=0.5, sigma=0.5, thresh=0
     return final_boxes, final_scores, final_labels
 
 
-def nms(boxes, scores, labels, iou_thr=0.5, weights=None):
+def nms(boxes, scores, labels, iou_thr=0.5, weights=None, **kwargs):
     """
     Short call for standard NMS 
     
@@ -226,7 +226,8 @@ def nms(boxes, scores, labels, iou_thr=0.5, weights=None):
     :param scores: 
     :param labels: 
     :param iou_thr: 
-    :param weights: 
+    :param weights:
+    :param kwargs
     :return: 
     """
     return nms_method(boxes, scores, labels, method=3, iou_thr=iou_thr, weights=weights)

@@ -143,7 +143,7 @@ def find_matching_box(boxes_list, new_box, match_iou):
     return best_index, best_iou
 
 
-def non_maximum_weighted(boxes_list, scores_list, labels_list, weights=None, iou_thr=0.55, skip_box_thr=0.0):
+def non_maximum_weighted(boxes_list, scores_list, labels_list, weights=None, iou_thr=0.55, skip_box_thr=0.0, **kwargs):
     '''
     :param boxes_list: list of boxes predictions from each model, each box is 4 numbers. 
     It has 3 dimensions (models_number, model_preds, 4)
@@ -152,7 +152,8 @@ def non_maximum_weighted(boxes_list, scores_list, labels_list, weights=None, iou
     :param labels_list: list of labels for each model
     :param weights: list of weights for each model. Default: None, which means weight == 1 for each model
     :param iou_thr: IoU value for boxes to be a match
-    :param skip_box_thr: exclude boxes with score lower than this variable  
+    :param skip_box_thr: exclude boxes with score lower than this variable
+    :param kwargs : to ensure compatibility with nms calling
     
     :return: boxes: boxes coordinates (Order of boxes: x1, y1, x2, y2). 
     :return: scores: confidence scores
