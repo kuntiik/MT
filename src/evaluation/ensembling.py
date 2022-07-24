@@ -23,6 +23,10 @@ class BoxesEnsemble:
         # if confidence_thresholds is None:
         #     self.confidence_thresholds = [1 ]
 
+    @property
+    def ensemble_method_dict(self):
+        return {'wbf': weighted_boxes_fusion, 'nms': nms, 'nmw': non_maximum_weighted, 'snms': soft_nms}
+
     def load_pred_eval(self, annotations_path, train_val_names):
         self.pred_eval = PredictionEval()
         self.pred_eval.load_ground_truth(annotations_path, train_val_names)
@@ -37,9 +41,9 @@ class BoxesEnsemble:
             # self.prediction_dictionaries[index]['conf_norm'] = coef
 
     def prepare_img(self, img_name):
-        boxes_all = []
-        scores_all = []
-        labels_all = []
+        """Changes the boxes coordinates to relative and outputs boxes, scores,
+        labels in the format required for the ensemble"""
+        boxes_all, scores_all, labels_all = [], [], []
         for pred_dict in self.prediction_dictionaries:
             boxes = []
             for bbox in pred_dict[img_name]['bboxes']:
@@ -53,30 +57,17 @@ class BoxesEnsemble:
         return boxes_all, scores_all, labels_all
 
     def ensemble(self, weights, iou_thr, skip_box_thr=0.01, stage='val', ensemble_method='wbf', sigma=0.1):
-        if stage == 'val':
-            files = 'val_files'
-        elif stage == 'test':
-            files = 'test_files'
-        else:
-            files = 'train_files'
+        """Ensembles boxes by specified ensemble_method, returns dictionary of ensembled predictions"""
+        assert stage in ['test', 'val', 'train']
+        files = stage + '_files'
         dict_out = {}
         for img_name in self.metadata[files]:
             boxes, scores, labels = self.prepare_img(img_name)
-            if ensemble_method == 'wbf':
-                boxes_out, scores_out, labels_out = weighted_boxes_fusion(boxes, scores, labels, weights=weights,
-                                                                          iou_thr=iou_thr,
-                                                                          skip_box_thr=skip_box_thr)
-            elif ensemble_method == 'nwm':
-                boxes_out, scores_out, labels_out = non_maximum_weighted(boxes, scores, labels, weights=weights,
-                                                                         iou_thr=iou_thr,
-                                                                         skip_box_thr=skip_box_thr)
-            elif ensemble_method == 'snms':
-                boxes_out, scores_out, labels_out = soft_nms(boxes, scores, labels, weights=weights, iou_thr=iou_thr,
-                                                             sigma=sigma,
-                                                             thresh=skip_box_thr)
-            elif ensemble_method == 'nms':
-                boxes_out, scores_out, labels_out = nms(boxes, scores, labels, weights=weights, iou_thr=iou_thr)
-
+            boxes_out, scores_out, labels_out = self.ensemble_method_dict[ensemble_method](boxes, scores, labels,
+                                                                                           weights=weights,
+                                                                                           iou_thr=iou_thr,
+                                                                                           skip_box_thr=skip_box_thr,
+                                                                                           sigma=sigma)
             boxes_rescaled = []
             for bbox in boxes_out:
                 x1, y1, x2, y2 = bbox
@@ -84,7 +75,9 @@ class BoxesEnsemble:
             dict_out[img_name] = {'bboxes': boxes_rescaled, 'scores': scores_out, 'labels': labels_out, 'stage': stage}
         return dict_out
 
-    def enseble_and_save(self, name, weights, iou_thr, ensemble_method='wbf', skip_box_thr=0.01, sigma=0.7):
+    def enseble_and_save(self, name: str, weights: List[float], iou_thr: float, ensemble_method: str = 'wbf',
+                         skip_box_thr: float = 0.01, sigma: float = 0.7):
+        """Does the ensemble and saves it as the name.json file."""
         train_data = self.ensemble(weights, iou_thr, skip_box_thr, stage='train', ensemble_method=ensemble_method)
         val_data = self.ensemble(weights, iou_thr, skip_box_thr, stage='val', ensemble_method=ensemble_method)
         test_data = self.ensemble(weights, iou_thr, skip_box_thr, stage='test', ensemble_method=ensemble_method)
@@ -97,15 +90,15 @@ class BoxesEnsemble:
         return data
 
     def evaluate_ensemble(self, weights, iou_thr, stage='val', ensemble_method='wbf', sigma=0.5):
-        if stage == 'val':
-            files = 'val_files'
-        else:
-            files = 'test_files'
+        """Does the ensemble and returns AP@.iou_thr on the given stage. """
+        assert stage in ['test', 'val', 'train']
+        files = stage + '_files'
         ensembled_boxes = self.ensemble(weights, iou_thr, stage=stage, ensemble_method=ensemble_method,
                                         sigma=sigma)
         preds_coco, _ = to_coco(ensembled_boxes, str(self.annotations_path))
         self.pred_eval.load_predictions(preds_coco)
 
+        # this is hot-patch for cross-validation return to this and rewrite it
         if stage == 'val':
             return self.pred_eval.map_query(stage=stage)
         else:
