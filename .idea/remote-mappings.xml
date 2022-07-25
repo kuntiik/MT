@@ -11,6 +11,13 @@
             </list>
           </settings>
         </remote-mappings>
+        <remote-mappings server-id="python@sftp://kuntluka@boruvka.felk.cvut.cz:22/home.stud/kuntluka/.conda/envs/mt/bin/python">
+          <settings>
+            <list>
+              <mapping local-root="$PROJECT_DIR$" remote-root="/home.stud/kuntluka/MT" />
+            </list>
+          </settings>
+        </remote-mappings>
       </list>
     </list>
   </component>
