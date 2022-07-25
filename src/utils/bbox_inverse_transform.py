@@ -38,10 +38,12 @@ def get_size_without_padding(
     return after_height, after_width
 
 
-#TODO this function is not ready for adding padding to change width
+# TODO this function is not ready for adding padding to change width
 def inverse_transform_bbox(
         bbox: BBox, tfms: List[Any], original_size, size
 ):
+    """Transforms predicted bbox to its original coordinated (before resizing the image). Right now, the size is hard-fixed
+    to 1024x896."""
     before_width, before_height = original_size
     after_width, after_height = size
 
@@ -54,27 +56,14 @@ def inverse_transform_bbox(
     y1 /= height_frac
     y2 /= height_frac
     x1, x2, y1, y2 = (max(x1, 0), min(x2, before_width), max(y1, 0), min(y2, before_height))
-    return BBox.from_xyxy(x1,y1,x2,y2)
-
-    no_pad_height, no_pad_width = get_size_without_padding(
-        tfms, before_height, before_width, after_height, after_width
-    )
-    bbox = copy.deepcopy(bbox)
-    pad = np.abs(after_height - no_pad_height) / 2
-    h_scale, w_scale = no_pad_height / before_height, no_pad_width / before_width
-    # if after_height < after_width:
-    x1, x2, y1, y2 = bbox.xmin, bbox.xmax, bbox.ymin - pad, bbox.ymax - pad
-    # else:
-        # x1, x2, y1, y2 = bbox.xmin - pad, bbox.xmax - pad, bbox.ymin, bbox.ymax
-
-    x1, x2, y1, y2 = (max(x1, 0), min(x2, after_width), max(y1, 0), min(y2, after_height))
-    x1, x2, y1, y2 = (x1 / w_scale, x2 / w_scale, y1 / h_scale, y2 / h_scale)
     return BBox.from_xyxy(x1, y1, x2, y2)
 
 
 def inverse_transform_record(
         record: record, tfms=None
 ):
+    """Transforms the record data from resized image to the original image. Right now the size is hard fixes to 1024x896
+    """
     prediction = BaseRecord(
         (
             ScoresRecordComponent(),
@@ -88,7 +77,7 @@ def inverse_transform_record(
     size = record.common.img_size
 
     if tfms is None:
-        tfms = resize_and_pad((1024,896))
+        tfms = resize_and_pad((1024, 896))
 
     prediction.detection.set_class_map(record.detection.class_map)
 
@@ -110,16 +99,14 @@ def inverse_transform_record(
         )
     )
     ground_truth = copy.deepcopy(record.ground_truth)
-    # ground_truth.detection.set_class_map(record.detection.class_map)
-    # ground_truth.record_id = record.record_id
-    inverted_bboxes = [inverse_transform_bbox(bbox, tfms, orig_size, size) for bbox in record.ground_truth.detection.bboxes]
+    inverted_bboxes = [inverse_transform_bbox(bbox, tfms, orig_size, size) for bbox in
+                       record.ground_truth.detection.bboxes]
     ground_truth.detection.set_bboxes(inverted_bboxes)
-    # ground_truth.set_img(record.img)
-    # ground_truth.detection.set_labels(record.ground_truth.detection.labels)
-
     return Prediction(pred=prediction, ground_truth=ground_truth)
 
-def predictions_to_fiftyone(predictions, stage=None):
+
+def predictions_to_fiftyone(predictions = List[Any], stage : str=None):
+    """Takes the predictions """
     data = {}
     for pred in predictions:
         if type(pred) == list and len(pred) == 1:
@@ -127,17 +114,15 @@ def predictions_to_fiftyone(predictions, stage=None):
         img_id = pred.record_id
         bboxes_list, scores, labels = [], [], []
         record_inv = inverse_transform_record(pred)
-        for bbox, score, label in zip(record_inv.pred.detection.bboxes, record_inv.pred.detection.scores, record_inv.pred.detection.labels):
+        for bbox, score, label in zip(record_inv.pred.detection.bboxes, record_inv.pred.detection.scores,
+                                      record_inv.pred.detection.labels):
             bboxes_list.append(np.array([*bbox.xyxy]).astype(np.double).tolist())
             scores.append(np.double(score))
             labels.append(1)
         data[img_id] = {
-            "bboxes" : bboxes_list,
-            "labels" : labels,
-            "scores" : scores,
-            "stage" : stage
+            "bboxes": bboxes_list,
+            "labels": labels,
+            "scores": scores,
+            "stage": stage
         }
     return data
-
-
-

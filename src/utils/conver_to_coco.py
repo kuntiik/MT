@@ -1,18 +1,14 @@
 import json
 from pathlib import Path
+from typing import Union
+from src.utils.format_handling import load_dict
 
-def to_coco(pred_dict, annotations):
-    if type(annotations) == str or type(annotations) == Path:
-        with open(annotations, 'r') as f:
-            ann_file = json.load(f)
-    else:
-        ann_file = annotations
 
-    if type(pred_dict) == str or type(pred_dict) == Path:
-        with open(pred_dict, 'r') as f:
-            preds = json.load(f)
-    else:
-        preds = pred_dict
+def to_coco(pred_dict: Union[Path, str, dict], annotations: Union[Path, str, dict]):
+    """Converts predictions represented by pred_dict to COCO format. Annotations are required to get
+     image names."""
+    ann_file = load_dict(annotations)
+    preds = load_dict(pred_dict)
 
     pred_id = 0
     train, val, test, all = [], [], [], []
@@ -26,7 +22,8 @@ def to_coco(pred_dict, annotations):
             width, height = x2 - x1, y2 - y1
             final_box = [x1, y1, width, height]
             area = width * height
-            pred_dict = {'area' : area, 'id' : pred_id, 'bbox' : final_box, 'image_id' : id, 'category_id' : 1, 'score' : score}
+            pred_dict = {'area': area, 'id': pred_id, 'bbox': final_box, 'image_id': id, 'category_id': 1,
+                         'score': score}
             all.append(pred_dict)
             pred_id += 1
         if pred['stage'] == 'val':
@@ -36,8 +33,7 @@ def to_coco(pred_dict, annotations):
         elif pred['stage'] == 'test':
             test.append(id)
 
-    data = {'categories' : [{'supercategory' : "", 'name' : 'decay', 'id' : 1}]}
-    data['images'] = ann_file['images']
-    data['annotations'] = all
-    stage_ids = {'type' : 'id', 'train' : train, 'val' : val, 'test' : test}
+    data = {'categories': [{'supercategory': "", 'name': 'decay', 'id': 1}], 'images': ann_file['images'],
+            'annotations': all}
+    stage_ids = {'type': 'id', 'train': train, 'val': val, 'test': test}
     return data, stage_ids
