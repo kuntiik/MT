@@ -9,8 +9,17 @@ from hydra.utils import instantiate
 import hydra
 
 from src.transforms import TransformsComposer
+import pytorch_lightning as pl
 
 
+def test_training_cpu(cfg):
+    trainer: pl.Trainer = instantiate(cfg.trainer, fast_dev_run=True)
+    transforms: TransformsComposer = instantiate(cfg.transforms, _recursive_=False)
+    train_tfms, val_tfms = transforms.train_val_transforms()
+    dm: DentalCaries = instantiate(cfg.datamodule, train_transforms=train_tfms, val_transforms=val_tfms, num_workers=0)
+    dm.setup()
+    for batch in dm.test_dataloader():
+        pass
 
 def test_parsing(mini_caries_records):
     assert len(mini_caries_records) == 3
