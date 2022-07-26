@@ -1,5 +1,6 @@
 from src.evaluation.boxes_fusion.ensemble_boxes_wbf import weighted_boxes_fusion
 
+
 def test_weighted_boxes_fusion():
 
     boxes_list = [[
