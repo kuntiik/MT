@@ -17,20 +17,20 @@ class Objective:
         self.weight_area = weight_area
         self.area_dict = ["small", "medium", "large"]
 
-    def __call__(self, trial: optuna.trial.Trial):
+    def __call__(self, trial: optuna.trial.Trial, stage='val'):
         weights = []
         if self.weight_area:
             for i in range(self.boxes_ensemble.num_models):
                 sub_w = []
                 for j in range(3):
-                    sub_w.append(trial.suggest_float(f"model_weight{i}_area_{self.area_dict[j]}", 0.01, 1))
+                    sub_w.append(trial.suggest_float(f"model_weight{i}_area_{self.area_dict[j]}", 0, 1))
                 weights.append(sub_w)
         else:
             for i in range(self.boxes_ensemble.num_models):
-                weights.append(trial.suggest_float(f"model_weight{i}", 0.01, 1))
+                weights.append(trial.suggest_float(f"model_weight{i}", 0, 1))
 
         threshold = trial.suggest_float(f'threshold', 0.05, 1)
-        return boxesensemble.evaluate_ensemble(weights, threshold, ensemble_method=self.ensemble_method)
+        return boxesensemble.evaluate_ensemble(weights, threshold, ensemble_method=self.ensemble_method, stage=stage)
 
 
 def normalize_confidences(preds, ann_path):
@@ -71,9 +71,9 @@ if __name__ == '__main__':
 
     ############################################
     # TODO change this to be modifiable from the command line
-    pred_path = Path('../ens_search_all6')
+    pred_path = Path('../data/predictions/ens_search_all6')
     # pred_path = Path('../ens_test')
-    ann_path = Path('/datagrid/personal/kuntluka/dental_rtg3/annotations6.json')
+    ann_path = Path('/datagrid/personal/kuntluka/dental_rtg/caries6.json')
 
     preds = list(pred_path.iterdir())
     preds = [pred.name for pred in preds]
@@ -87,18 +87,19 @@ if __name__ == '__main__':
         with open(pred_path / pred_name, 'r') as f:
             preds_dicts.append(json.load(f))
 
-    preds_dicts_normalized, confidences = normalize_confidences(preds_dicts, ann_path)
+    # preds_dicts_normalized, confidences = normalize_confidences(preds_dicts, ann_path)
 
-    with open('../metadata4000.json', 'r') as f:
+    with open('../data/metadata/metadata4000.json', 'r') as f:
         meta_data = json.load(f)
 
-    boxesensemble = BoxesEnsemble(meta_data, preds_dicts_normalized, ann_path, None)
-    boxesensemble.load_pred_eval(ann_path, meta_data)
+    preds_coco, names = to_coco(preds_dicts[0], ann_path)
+    boxesensemble = BoxesEnsemble(meta_data, preds_dicts, ann_path, None)
+    boxesensemble.load_pred_eval(ann_path, names)
     ###########################################
-    study = optuna.create_study(
-        direction='maximize',
-        storage="sqlite:///ens_search_yolo_m.db",
-        study_name='ens_search_61'
+    study = optuna.load_study(
+        # direction='maximize',
+        storage="sqlite:///ens_search_caries_61.db",
+        study_name='ens_search_6'
     )
     study.optimize(Objective(boxesensemble, weight_area=False, ensemble_method='wbf'), n_trials=5000)
     print("Number of finished trials: {}".format(len(study.trials)))

@@ -1,23 +1,37 @@
 # coding: utf-8
 __author__ = 'ZFTurbo: https://kaggle.com/zfturbo'
 
-
 import warnings
 import numpy as np
+
+
+def remove_zero_weights(boxes, scores, labels, weights):
+    new_boxes, new_scores, new_labels, new_weights = [], [], [], []
+    for i, w in enumerate(weights):
+        if w > 0:
+            new_boxes.append(boxes[i])
+            new_scores.append(scores[i])
+            new_labels.append(labels[i])
+            new_weights.append(weights[i])
+    return new_boxes, new_scores, new_labels, new_weights
 
 
 def prefilter_boxes(boxes, scores, labels, weights, thr):
     # Create dict with boxes stored by its label
     new_boxes = dict()
+    # We need to take care of zero weights
+    boxes, scores, labels, weights = remove_zero_weights(boxes, scores, labels, weights)
 
     for t in range(len(boxes)):
 
         if len(boxes[t]) != len(scores[t]):
-            print('Error. Length of boxes arrays not equal to length of scores array: {} != {}'.format(len(boxes[t]), len(scores[t])))
+            print('Error. Length of boxes arrays not equal to length of scores array: {} != {}'.format(len(boxes[t]),
+                                                                                                       len(scores[t])))
             exit()
 
         if len(boxes[t]) != len(labels[t]):
-            print('Error. Length of boxes arrays not equal to length of labels array: {} != {}'.format(len(boxes[t]), len(labels[t])))
+            print('Error. Length of boxes arrays not equal to length of labels array: {} != {}'.format(len(boxes[t]),
+                                                                                                       len(labels[t])))
             exit()
 
         for j in range(len(boxes[t])):
@@ -72,7 +86,7 @@ def prefilter_boxes(boxes, scores, labels, weights, thr):
                 area = (x2 - x1) * 1068 * 847 * (y2 - y1)
                 if area <= 32 ** 2:
                     w = weights[t][0]
-                elif area > 32 ** 2 and area <= 96 **2:
+                elif area > 32 ** 2 and area <= 96 ** 2:
                     w = weights[t][1]
                 # else area > 96 **2:
                 else:
@@ -116,7 +130,7 @@ def get_weighted_box(boxes, conf_type='avg'):
     elif conf_type == 'max':
         box[1] = np.array(conf_list).max()
     box[2] = w
-    box[3] = -1 # model index field is retained for consistency but is not used.
+    box[3] = -1  # model index field is retained for consistency but is not used.
     box[4:] /= conf
     return box
 
@@ -126,6 +140,7 @@ def find_matching_box_fast(boxes_list, new_box, match_iou):
         Reimplementation of find_matching_box with numpy instead of loops. Gives significant speed up for larger arrays
         (~100x). This was previously the bottleneck since the function is called for every entry in the array.
     """
+
     def bb_iou_array(boxes, new_box):
         # bb interesection over union
         xA = np.maximum(boxes[:, 0], new_box[0])
@@ -199,12 +214,14 @@ def weighted_boxes_fusion(
     if weights is None:
         weights = np.ones(len(boxes_list))
     if len(weights) != len(boxes_list):
-        print('Warning: incorrect number of weights {}. Must be: {}. Set weights equal to 1.'.format(len(weights), len(boxes_list)))
+        print('Warning: incorrect number of weights {}. Must be: {}. Set weights equal to 1.'.format(len(weights),
+                                                                                                     len(boxes_list)))
         weights = np.ones(len(boxes_list))
     weights = np.array(weights)
 
     if conf_type not in ['avg', 'max', 'box_and_model_avg', 'absent_model_aware_avg']:
-        print('Unknown conf_type: {}. Must be "avg", "max" or "box_and_model_avg", or "absent_model_aware_avg"'.format(conf_type))
+        print('Unknown conf_type: {}. Must be "avg", "max" or "box_and_model_avg", or "absent_model_aware_avg"'.format(
+            conf_type))
         exit()
 
     filtered_boxes = prefilter_boxes(boxes_list, scores_list, labels_list, weights, skip_box_thr)
@@ -238,7 +255,7 @@ def weighted_boxes_fusion(
                 # identify unique model index by model index column
                 _, idx = np.unique(clustered_boxes[:, 3], return_index=True)
                 # rescale by unique model weights
-                weighted_boxes[i, 1] = weighted_boxes[i, 1] *  clustered_boxes[idx, 2].sum() / weights.sum()
+                weighted_boxes[i, 1] = weighted_boxes[i, 1] * clustered_boxes[idx, 2].sum() / weights.sum()
             elif conf_type == 'absent_model_aware_avg':
                 clustered_boxes = np.array(clustered_boxes)
                 # get unique model index in the cluster
@@ -247,7 +264,8 @@ def weighted_boxes_fusion(
                 mask = np.ones(len(weights), dtype=bool)
                 mask[models] = False
                 # absent model aware weighted average
-                weighted_boxes[i, 1] = weighted_boxes[i, 1] * len(clustered_boxes) / (weighted_boxes[i, 2] + weights[mask].sum())
+                weighted_boxes[i, 1] = weighted_boxes[i, 1] * len(clustered_boxes) / (
+                            weighted_boxes[i, 2] + weights[mask].sum())
             elif conf_type == 'max':
                 weighted_boxes[i, 1] = weighted_boxes[i, 1] / weights.max()
             elif not allows_overflow:

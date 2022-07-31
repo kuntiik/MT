@@ -1,6 +1,7 @@
 from typing import Dict, List, Union
 
 import numpy as np
+
 from src.evaluation.pycocotools.coco import COCO
 from src.evaluation.pycocotools.cocoeval import COCOeval, Params
 

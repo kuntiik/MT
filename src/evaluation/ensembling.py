@@ -1,12 +1,14 @@
+import json
+from pathlib import Path
 from typing import List, Dict
+
 import numpy as np
-from src.evaluation.boxes_fusion.ensemble_boxes_wbf import weighted_boxes_fusion
+
 from src.evaluation.boxes_fusion.ensemble_boxes_nms import nms, soft_nms
 from src.evaluation.boxes_fusion.ensemble_boxes_nmw import non_maximum_weighted
-from src.utils.conver_to_coco import to_coco
+from src.evaluation.boxes_fusion.ensemble_boxes_wbf import weighted_boxes_fusion
 from src.evaluation.prediction_evaluation import PredictionEval
-from pathlib import Path
-import json
+from src.utils.conver_to_coco import to_coco
 
 
 class BoxesEnsemble:
@@ -25,6 +27,7 @@ class BoxesEnsemble:
 
     @property
     def ensemble_method_dict(self):
+        """Dict to represent function names by their shortcuts"""
         return {'wbf': weighted_boxes_fusion, 'nms': nms, 'nmw': non_maximum_weighted, 'snms': soft_nms}
 
     def load_pred_eval(self, annotations_path, train_val_names):
@@ -56,7 +59,7 @@ class BoxesEnsemble:
             labels_all.append(pred_dict[img_name]['labels'])
         return boxes_all, scores_all, labels_all
 
-    def ensemble(self, weights, iou_thr, skip_box_thr=0.01, stage='val', ensemble_method='wbf', sigma=0.1):
+    def ensemble(self, weights, iou_thr, skip_box_thr=0.001, stage='val', ensemble_method='wbf', sigma=0.1):
         """Ensembles boxes by specified ensemble_method, returns dictionary of ensembled predictions"""
         assert stage in ['test', 'val', 'train']
         files = stage + '_files'
@@ -89,11 +92,11 @@ class BoxesEnsemble:
             json.dump(data, f)
         return data
 
-    def evaluate_ensemble(self, weights, iou_thr, stage='val', ensemble_method='wbf', sigma=0.5):
+    def evaluate_ensemble(self, weights, iou_thr, stage='val', ensemble_method='wbf', sigma=0.5, skip_box_thr=0.001):
         """Does the ensemble and returns AP@.iou_thr on the given stage. """
         assert stage in ['test', 'val', 'train']
         files = stage + '_files'
-        ensembled_boxes = self.ensemble(weights, iou_thr, stage=stage, ensemble_method=ensemble_method,
+        ensembled_boxes = self.ensemble(weights, iou_thr,skip_box_thr=skip_box_thr, stage=stage, ensemble_method=ensemble_method,
                                         sigma=sigma)
         preds_coco, _ = to_coco(ensembled_boxes, str(self.annotations_path))
         self.pred_eval.load_predictions(preds_coco)
@@ -102,4 +105,4 @@ class BoxesEnsemble:
         if stage == 'val':
             return self.pred_eval.map_query(stage=stage)
         else:
-            return self.pred_eval.get_data('ensembling_' + ensemble_method)
+            return self.pred_eval.get_latex_table('ensembling_' + ensemble_method)
