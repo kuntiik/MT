@@ -8,6 +8,9 @@ model:
   _target_ : src.modules.yolov5.YoloV5Module
   model :
     _target_ : src.models.yolov5.model
+    device:
+      _target_ : torch.device
+      device : 'cuda'
     backbone :
       _target_ : src.models.yolov5.backbones.${module.backbone}
       pretrained : 1

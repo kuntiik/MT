@@ -1,0 +1,9 @@
+_target_ : src.datamodules.dental.DentalCaries
+data_root : /datagrid/personal/kuntluka/dental_rtg_test
+model_type : ${module.model_type}
+ann_file : 'test_annotations.json'
+batch_size : 1
+num_workers : 8
+limit_train_samples : null
+train_val_test_split: [0.0, 0.00, 1.00]
+seed : ${seed}
