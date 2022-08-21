@@ -78,7 +78,7 @@ class BoxesEnsemble:
             dict_out[img_name] = {'bboxes': boxes_rescaled, 'scores': scores_out, 'labels': labels_out, 'stage': stage}
         return dict_out
 
-    def enseble_and_save(self, name: str, weights: List[float], iou_thr: float, ensemble_method: str = 'wbf',
+    def ensemble_and_save(self, name: str, weights: List[float], iou_thr: float, ensemble_method: str = 'wbf',
                          skip_box_thr: float = 0.01, sigma: float = 0.7):
         """Does the ensemble and saves it as the name.json file."""
         train_data = self.ensemble(weights, iou_thr, skip_box_thr, stage='train', ensemble_method=ensemble_method)
@@ -98,7 +98,8 @@ class BoxesEnsemble:
         files = stage + '_files'
         ensembled_boxes = self.ensemble(weights, iou_thr,skip_box_thr=skip_box_thr, stage=stage, ensemble_method=ensemble_method,
                                         sigma=sigma)
-        preds_coco, _ = to_coco(ensembled_boxes, str(self.annotations_path))
+        preds_coco, names = to_coco(ensembled_boxes, str(self.annotations_path))
+        self.pred_eval.load_ground_truth(str(self.annotations_path), names)
         self.pred_eval.load_predictions(preds_coco)
 
         # this is hot-patch for cross-validation return to this and rewrite it
