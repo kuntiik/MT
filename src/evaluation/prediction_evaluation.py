@@ -116,9 +116,13 @@ class PredictionEval:
 
     def evaluate_by_stage(self, stage: str):
         """Evaluates the loaded data for the given stage"""
+        self.cocoEval.params.iouThrs = np.round(
+            np.linspace(0.05, 0.95, int((0.95 - 0.05) / 0.05) + 2, endpoint=True), 3
+        )
         self.cocoEval.params.imgIds = self.indices_by_stage(stage)
         self.cocoEval.evaluate()
         self.cocoEval.accumulate()
+
 
     def evaluate_map(self, queries: List[Dict], stage: str = "all", summary: bool = False, verbose: bool = True):
         """Evaluates AP for given queries on given stage."""
