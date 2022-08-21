@@ -1,4 +1,4 @@
-
+import argparse
 import sys
 sys.path.append('..')
 import optuna
@@ -66,41 +66,53 @@ def normalize_confidences(preds, ann_path):
         #     pred_n['annotations'].append(ann_new)
     return preds_normalized, confidences
 
+parser = argparse.ArgumentParser(description='Search best weights for ensembling, powered by optuna library')
+parser.add_argument('-p', '--path', help='path to the folder with json files (can be nested)', default='/home.stud/kuntluka/MT/data/predictions/default_predictions')
+parser.add_argument('-s', '--study', help='Name of the Optuna study', default='study_66')
+parser.add_argument('-t', '--threshold', help='minimal test dataset performance ', type=float, default=0.3)
+parser.add_argument('-m', '--metadata', help='Path to the metadata file', type=str, default='../data/metadata/metadata4000.json')
+parser.add_argument('-a', '--annotations', help='Path to the annotations file', type=str, default='/datagrid/personal/kuntluka/dental_rtg/caries6.json')
+parser.add_argument('-l', '--load',action='store_false' ,help='Start new study or load an existing study')
 
 if __name__ == '__main__':
+    args = parser.parse_args()
 
-    ############################################
-    # TODO change this to be modifiable from the command line
-    pred_path = Path('../data/predictions/ens_search_all6')
-    # pred_path = Path('../ens_test')
-    ann_path = Path('/datagrid/personal/kuntluka/dental_rtg/caries6.json')
+    pred_path = Path(args.path)
+    ann_path = Path(args.annotations)
 
-    preds = list(pred_path.iterdir())
-    preds = [pred.name for pred in preds]
-
+    # preds = list(pred_path.iterdir())
+    preds = list(pred_path.rglob('**/*.json'))
     # with open('confidence_thresholds.json', 'r') as f:
     #     confidence_thr = json.load(f)
     # confidences = [confidence_thr[p] for p in preds]
 
     preds_dicts = []
-    for pred_name in preds:
-        with open(pred_path / pred_name, 'r') as f:
-            preds_dicts.append(json.load(f))
+    for pred in preds:
+        if float(pred.stem) >= args.threshold:
+            with open(pred, 'r') as f:
+                preds_dicts.append(json.load(f))
 
     # preds_dicts_normalized, confidences = normalize_confidences(preds_dicts, ann_path)
 
-    with open('../data/metadata/metadata4000.json', 'r') as f:
-        meta_data = json.load(f)
+    # with open('../data/metadata/metadata4000.json', 'r') as f:
+    with open(args.metadata, 'r') as f:
+            meta_data = json.load(f)
 
     preds_coco, names = to_coco(preds_dicts[0], ann_path)
-    boxesensemble = BoxesEnsemble(meta_data, preds_dicts, ann_path, None)
+    boxesensemble = BoxesEnsemble(meta_data, preds_dicts, ann_path)
     boxesensemble.load_pred_eval(ann_path, names)
     ###########################################
-    study = optuna.load_study(
-        # direction='maximize',
-        storage="sqlite:///ens_search_caries_61.db",
-        study_name='ens_search_6'
-    )
+    if args.load:
+        study = optuna.load_study(
+            storage="sqlite:///ens_search_caries_61.db",
+            study_name = args.study
+        )
+    else:
+        study = optuna.create_study(
+            direction='maximize',
+            storage="sqlite:///ens_search_caries_61.db",
+            study_name = args.study
+        )
     study.optimize(Objective(boxesensemble, weight_area=False, ensemble_method='wbf'), n_trials=5000)
     print("Number of finished trials: {}".format(len(study.trials)))
     print("Best trial: ")
