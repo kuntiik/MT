@@ -1,3 +1,5 @@
+import sys
+sys.path.append('..')
 import hydra
 import pytorch_lightning as pl
 import torch
@@ -8,11 +10,12 @@ from src.utils.bbox_inverse_transform import predictions_to_fiftyone
 import json
 from src.utils.conver_to_coco import to_coco
 from src.evaluation.prediction_evaluation import PredictionEval
+import argparse
 
 
 def create_overrides_and_path(ckpt_name):
     overrides = []
-    target_path = ""
+    target_path = Path("")
     if '/retinanet/' in ckpt_name:
         overrides.append('module=retinanet')
         target_path = Path('retinanet')
@@ -29,15 +32,15 @@ def create_overrides_and_path(ckpt_name):
         overrides.append('module=efficientdet')
         target_path = Path('effdet')
 
-    if '/medium_p6/' in ckpt_name:
+    if '/medium/' in ckpt_name:
         overrides.append('module.backbone=medium_p6')
         target_path = target_path / "medium"
 
-    if '/small_p6/' in ckpt_name:
+    if '/small/' in ckpt_name:
         overrides.append('module.backbone=small_p6')
         target_path = target_path / "small"
 
-    elif '/large_p6/' in ckpt_name:
+    elif '/large/' in ckpt_name:
         overrides.append('module.backbone=large_p6')
         target_path = target_path / "large"
 
@@ -49,7 +52,7 @@ def create_overrides_and_path(ckpt_name):
         overrides.append('module.backbone=resnet50_fpn_1x')
         target_path = target_path / "resnet50"
 
-    elif '/swint/' in ckpt_name:
+    elif ('/swint/' in ckpt_name) or ('/swin_t/' in ckpt_name):
         overrides.append('module.backbone=swin_t_p4_w7_fpn_1x_coco')
         target_path = target_path / "swint"
 
@@ -72,7 +75,8 @@ def create_overrides_and_path(ckpt_name):
     return overrides, target_path
 
 
-def predict_and_save(ckpt, ann_path, path=Path('predictions')):
+def predict_and_save(ckpt, ann_path, target_path):
+    path = Path(target_path)
     overrides, name = create_overrides_and_path(str(ckpt))
     overrides.append('logger.wandb.project=inference')
     with hydra.initialize(config_path="../configs"):
@@ -120,11 +124,21 @@ def predict_and_save(ckpt, ann_path, path=Path('predictions')):
     with open(save_name, 'w') as f:
         json.dump(data, f)
 
+    with open(path / 'metadata.txt', 'a') as f:
+        f.write(str(ckpt) + " " + str(save_name) + "\n")
+
+parser = argparse.ArgumentParser(description='Make predictions and save them as json file')
+parser.add_argument('-t', '--target', default='/home.stud/kuntluka/MT/data/predictions/default_predictions')
+parser.add_argument('-a', '--annotations', default='/datagrid/personal/kuntluka/dental_rtg/caries6.json', help='string with path to annotation file in json format')
+parser.add_argument('-w', '--weights', default='/datagrid/personal/kuntluka/weights6',  help='string with path to folder with weights to make predictions with')
+
 
 if __name__ == '__main__':
-    ann_path = '/datagrid/personal/kuntluka/dental_rtg3/annotations.json'
-    weights_root = Path('/datagrid/personal/kuntluka/weights').rglob("**/*.ckpt")
+    args = parser.parse_args()
+    # ann_path = '/datagrid/personal/kuntluka/dental_rtg3/annotations.json'
+    weights_root = Path(args.weights).rglob("**/*.ckpt")
     ckpt_path = list(weights_root)
     for ckpt in ckpt_path:
-        predict_and_save(ckpt, ann_path)
+        print(str(ckpt))
+        predict_and_save(ckpt, args.annotations, args.target)
 
