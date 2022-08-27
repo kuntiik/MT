@@ -1,3 +1,5 @@
+from typing import Tuple, Any
+
 from torchmetrics import MeanMetric
 from pytorch_lightning import LightningModule
 import torch
@@ -74,8 +76,22 @@ class SegmentationModule(LightningModule):
     #     return {"log": log_dict, "val_loss": log_dict["val_loss"], "progress_bar": log_dict}
     def predict_step(self, batch, batch_idx):
         img, mask = batch
-        out = self(img)
-        return (out, mask)
+        out = F.softmax(self(img), dim=1)[:,1,...]
+        return out
+
+    # def on_predict_epoch_end(self, results) -> Tuple[Any, Any]:
+    #     preds, masks = [], []
+    #     print(type(results))
+    #     print(type(results[0]))
+    #     print(type(results[0][0]))
+    #     for batch in results:
+    #         for pred, mask in batch:
+    #             preds.append(pred)
+    #             masks.append(mask)
+    #     preds = F.softmax(torch.cat(preds), dim=1)[:, 1, ...]
+    #     masks = torch.cat(masks)
+    #     results = (preds, masks)
+    #     return preds, masks
 
 
     def test_step(self, batch, batch_idx):

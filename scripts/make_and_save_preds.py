@@ -65,6 +65,12 @@ def create_overrides_and_path(ckpt_name):
     elif '/d2/' in ckpt_name:
         overrides.append('module.backbone=d2')
         target_path = target_path / "d2"
+    elif '/d3/' in ckpt_name:
+        overrides.append('module.backbone=d3')
+        target_path = target_path / "d3"
+    elif '/d4/' in ckpt_name:
+        overrides.append('module.backbone=d4')
+        target_path = target_path / "d4"
     elif '/tf_d0/' in ckpt_name:
         overrides.append('module.backbone=tf_d0')
         target_path = target_path / "tf_d0"
@@ -75,10 +81,11 @@ def create_overrides_and_path(ckpt_name):
     return overrides, target_path
 
 
-def predict_and_save(ckpt, ann_path, target_path):
+def predict_and_save(ckpt, ann_path, target_path, additional_overrides = []):
     path = Path(target_path)
     overrides, name = create_overrides_and_path(str(ckpt))
     overrides.append('logger.wandb.project=inference')
+    overrides += additional_overrides
     with hydra.initialize(config_path="../configs"):
         cfg = hydra.compose(
             config_name="train",
@@ -100,13 +107,17 @@ def predict_and_save(ckpt, ann_path, target_path):
     dm = hydra.utils.instantiate(cfg.datamodule, train_transforms=v, val_transforms=v)
     dm.setup()
 
-    test_prediction = trainer.predict(model, dm.predict_dataloader('test'))
-    val_prediction = trainer.predict(model, dm.predict_dataloader('val'))
-    train_prediction = trainer.predict(model, dm.predict_dataloader('train'))
+    test_data = val_data = train_data = {}
+    if len(dm.predict_dataloader('test')) > 0:
+        test_prediction = trainer.predict(model, dm.predict_dataloader('test'))
+        test_data = predictions_to_fiftyone(test_prediction, stage='test')
+    if len(dm.predict_dataloader('val')) > 0:
+        val_prediction = trainer.predict(model, dm.predict_dataloader('val'))
+        val_data = predictions_to_fiftyone(val_prediction, stage='val')
+    if len(dm.predict_dataloader('train')) > 0:
+        train_prediction = trainer.predict(model, dm.predict_dataloader('train'))
+        train_data = predictions_to_fiftyone(train_prediction, stage='train')
 
-    test_data = predictions_to_fiftyone(test_prediction, stage='test')
-    val_data = predictions_to_fiftyone(val_prediction, stage='val')
-    train_data = predictions_to_fiftyone(train_prediction, stage='train')
     data = {**test_data, **val_data, **train_data}
 
     with open(ann_path, 'r') as f:
@@ -131,6 +142,7 @@ parser = argparse.ArgumentParser(description='Make predictions and save them as 
 parser.add_argument('-t', '--target', default='/home.stud/kuntluka/MT/data/predictions/default_predictions')
 parser.add_argument('-a', '--annotations', default='/datagrid/personal/kuntluka/dental_rtg/caries6.json', help='string with path to annotation file in json format')
 parser.add_argument('-w', '--weights', default='/datagrid/personal/kuntluka/weights6',  help='string with path to folder with weights to make predictions with')
+parser.add_argument('-o', '--overrides', default=None, type=str,  help='Additional overrides for hydra composition')
 
 
 if __name__ == '__main__':
@@ -138,7 +150,8 @@ if __name__ == '__main__':
     # ann_path = '/datagrid/personal/kuntluka/dental_rtg3/annotations.json'
     weights_root = Path(args.weights).rglob("**/*.ckpt")
     ckpt_path = list(weights_root)
+    overrides = [args.overrides] if args.overrides is not None else []
     for ckpt in ckpt_path:
         print(str(ckpt))
-        predict_and_save(ckpt, args.annotations, args.target)
+        predict_and_save(ckpt, args.annotations, args.target, additional_overrides=overrides)
 

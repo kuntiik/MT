@@ -14,9 +14,10 @@ from albumentations.pytorch.transforms import ToTensorV2
 
 
 class COCOSegmentation(Dataset):
-    def __init__(self, img_root, ann_path, transforms=None, apply_transforms=True):
+    def __init__(self, img_root, ann_path, transforms=None, apply_transforms=True, img_names=False):
         super().__init__()
-        # self.transforms = transforms
+        # img names is hot fix to get the name of the image from dataloader - TODO fix this by adopting icevision approach
+        self.img_names = img_names
         self.img_root = Path(img_root) if type(img_root) == str else img_root
         self.coco = COCO(ann_path)
         self.ids = list(sorted(self.coco.imgs.keys()))
@@ -33,6 +34,10 @@ class COCOSegmentation(Dataset):
         path = self.coco.loadImgs(id)[0]['file_name']
         # return np.asarray(Image.open(self.img_root / path).convert("RGB")).transpose(2,0,1)
         return np.asarray(Image.open(self.img_root / path).convert("RGB"))
+
+    def _load_img_name(self, id: int) -> Image.Image:
+        path = self.coco.loadImgs(id)[0]['file_name']
+        return self.img_root / path
 
     def _load_mask(self, id: int) -> Image.Image:
         targets = self.coco.loadAnns(self.coco.getAnnIds(imgIds=id, catIds=self.cat_id))
@@ -54,6 +59,8 @@ class COCOSegmentation(Dataset):
         ]
 
     def __getitem__(self, index):
+        if self.img_names:
+            return str(self._load_img_name(self.ids[index]))
         id = self.ids[index]
         img = self._load_img(id)
         mask = self._load_mask(id)
@@ -69,25 +76,26 @@ class COCOSegmentation(Dataset):
 class DentalRestorations(LightningDataModule):
     def __init__(self, img_root, ann_path, batch_size, train_transforms=None, val_transforms=None, transforms=True,
                  seed: int = 42, num_workers: int = 8,
-                 data_split: Tuple[int, int, int] = [0.8, 0.2, 0.0]):
+                 data_split: Tuple[int, int, int] = [0.8, 0.2, 0.0], train_shuffle=True, **kwargs):
         super().__init__()
         self.save_hyperparameters()
+        self.kwargs = kwargs
 
     def setup(self, stage: Optional[str] = None):
         tf, vf, tstf = self.hparams.data_split
         dataset = COCOSegmentation(self.hparams.img_root, self.hparams.ann_path, self.hparams.train_transforms,
-                                   apply_transforms=self.hparams.transforms)
+                                   apply_transforms=self.hparams.transforms, **self.kwargs)
         tn, vn, tstn = int(tf * len(dataset)), int(vf * len(dataset)), int(tstf * len(dataset))
         tn -= ((tn + vn + tstn) - len(dataset))
         split = [tn, vn, tstn]
         self.train_ds, _, _ = random_split(dataset, split, generator=torch.Generator().manual_seed(self.hparams.seed))
         dataset = COCOSegmentation(self.hparams.img_root, self.hparams.ann_path, self.hparams.val_transforms,
-                                   apply_transforms=self.hparams.transforms)
+                                   apply_transforms=self.hparams.transforms, **self.kwargs)
         _, self.val_ds, self.test_ds = random_split(dataset, split,
                                                     generator=torch.Generator().manual_seed(self.hparams.seed))
 
     def train_dataloader(self):
-        return DataLoader(self.train_ds, self.hparams.batch_size, shuffle=True, num_workers=self.hparams.num_workers)
+        return DataLoader(self.train_ds, self.hparams.batch_size, shuffle=self.hparams.train_shuffle, num_workers=self.hparams.num_workers)
 
     def val_dataloader(self):
         return DataLoader(self.val_ds, self.hparams.batch_size, shuffle=False, num_workers=self.hparams.num_workers)
