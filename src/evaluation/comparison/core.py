@@ -136,6 +136,15 @@ class Comparison:
         iou_avg = sum(ious_scaled) / sum(sizes)
         return float(iou_avg), sum(errors)
 
+    def pairwise_evaluate_per_img(self):
+        ious, errors, sizes = [], [], []
+        for key in self.first.keys():
+            iou, e, _ = self.assign_boxes_area(key, 0.0)
+            iou = [0] if len(iou) == 0 else iou
+            ious.append(sum(iou) / len(iou))
+            errors.append(e)
+        return ious, errors
+
     def precision_evaluate(self, criterion='area', iou_threshold=0.5):
         TP = 0
         FN = 0
