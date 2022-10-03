@@ -1,0 +1,15 @@
+# @package _global_
+
+defaults:
+  - override /module : unet_torch
+  - override /datamodule : dental_restorations
+  - override /callbacks : segmentation
+
+transforms:
+  tfms_mode : albu
+
+transforms.cfg.to_gray.apply : True
+
+logger:
+  wandb:
+    project : segmentation

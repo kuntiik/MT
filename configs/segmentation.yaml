@@ -1,0 +1,25 @@
+# @package _global_
+defaults:
+  - _self_
+  - trainer: default
+  - module : unet_torch
+  - datamodule : dental_caries
+  - logger : wandb.yaml
+  - callbacks : default.yaml
+  - transforms : default.yaml
+  - experiment : null
+
+  - hparams_search: null
+  - override hydra/job_logging: colorlog
+  - override hydra/hydra_logging: colorlog
+
+  # - logger: wandb # set logger here or use command line (e.g. `python run.py logger=wandb`)
+transforms:
+  tfms_mode : albu
+
+train : True
+test : True
+
+seed : 42
+name : null
+

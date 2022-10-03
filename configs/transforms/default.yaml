@@ -41,3 +41,9 @@ cfg :
       _target_ : albumentations.RandomGamma
       gamma_limit : [60, 140]
       p : 0.3
+
+  to_gray:
+    apply : False
+    transform :
+      _target_ : albumentations.ToGray
+      p : 1

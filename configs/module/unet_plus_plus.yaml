@@ -1,0 +1,11 @@
+img_size : [1088,864]
+model :
+  _target_ : src.modules.SegmentationModuleTorch
+  model:
+    _target_ : segmentation_models_pytorch.UnetPlusPlus
+    encoder_name : 'resnet50'
+    encoder_weights : 'imagenet'
+    in_channels : 3
+    classes : 1
+  learning_rate : 1e-4
+  weight_decay : 1e-6
