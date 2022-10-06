@@ -10,3 +10,15 @@ def load_dict(path: Union[Path, str, dict]):
             return json.load(f)
     else:
         return path
+
+def np_matrix_to_latex_table(table):
+    str_table = []
+    for row in table:
+        str_row = []
+        for c in row:
+            if c % 1 == 0:
+                str_row.append(str(int(c)))
+            else:
+                str_row.append(str(c))
+        str_table.append(' & '.join(str_row))
+    return table

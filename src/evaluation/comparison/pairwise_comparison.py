@@ -44,13 +44,19 @@ def generate_pairwise_table(names, ious, errors, ids, id_dict = None):
         avg_iou[id_dict[i2]] += i
         avg_e[id_dict[i1]] += e
         avg_e[id_dict[i2]] += e
-        results[id_dict[i1], id_dict[i2]] = round(i, 2)
-        results[ id_dict[i2], id_dict[i1]] = e
+        if id_dict[i1] < id_dict[i2]:
+            results[id_dict[i1], id_dict[i2]] = round(i, 2)
+            results[id_dict[i2], id_dict[i1]] = e
+        else:
+            results[id_dict[i2], id_dict[i1]] = round(i, 2)
+            results[id_dict[i1], id_dict[i2]] = e
     for i in range(len(ids)):
         avg_iou[i] /= (len(ids) - 1)
         avg_e[i] /= (len(ids) - 1)
-    results = np.hstack([results, np.expand_dims(np.asarray(avg_e), 1)])
-    results = np.vstack([results, np.hstack([np.round(avg_iou,2), [0]])])
+    results = np.hstack([results, np.expand_dims(np.round(avg_iou,2), 1)])
+    results = np.vstack([results, np.hstack([np.asarray(avg_e), [0]])])
+    # results = np.hstack([results, np.expand_dims(np.asarray(avg_e), 1)])
+    # results = np.vstack([results, np.hstack([np.round(avg_iou,2), [0]])])
     return results
 
 def generate_prob_table(names, ious, errors, ids):
@@ -76,8 +82,84 @@ def bootstrap_realization(iou1, iou2, e1, e2):
     return num_i / 1000.0, num_e / 1000.0
 
 
+def pairwise_centroids_plot_data_per_seniority(seniority, errors, ious, names, ids, experts, novices, names_dict):
+    centroids_e_all = {id: [] for id in ids}
+    centroids_i_all = {id: [] for id in ids}
+    centroids_e_expert = {id: [] for id in ids}
+    centroids_i_expert = {id: [] for id in ids}
+    centroids_e_novice = {id: [] for id in ids}
+    centroids_i_novice = {id: [] for id in ids}
 
-def pairwise_centroids_plot(errors, ious, names, ids, experts, novices, names_dict):
+    for e, i, n in zip(errors, ious, names):
+        i1, i2 = eval(n)
+        if i1 in experts or i1 in novices:
+            centroids_e_all[i2].append(e)
+            centroids_i_all[i2].append(i)
+            if i1 in experts:
+                centroids_e_expert[i2].append(e)
+                centroids_i_expert[i2].append(i)
+            if i1 in novices:
+                centroids_e_novice[i2].append(e)
+                centroids_i_novice[i2].append(i)
+
+        if i2 in experts or i2 in novices:
+            centroids_e_all[i1].append(e)
+            centroids_i_all[i1].append(i)
+            if i2 in experts:
+                centroids_e_expert[i1].append(e)
+                centroids_i_expert[i1].append(i)
+            if i2 in novices:
+                centroids_e_novice[i1].append(e)
+                centroids_i_novice[i1].append(i)
+
+    for key, value in centroids_e_all.items():
+        centroids_e_all[key] = sum(value) / len(value)
+    for key, value in centroids_i_all.items():
+        centroids_i_all[key] = sum(value) / len(value)
+    for key, value in centroids_e_novice.items():
+        centroids_e_novice[key] = sum(value) / len(value)
+    for key, value in centroids_i_novice.items():
+        centroids_i_novice[key] = sum(value) / len(value)
+    for key, value in centroids_e_expert.items():
+        centroids_e_expert[key] = sum(value) / len(value)
+    for key, value in centroids_i_expert.items():
+        centroids_i_expert[key] = sum(value) / len(value)
+
+    names_centroids_all = [names_dict[i] for i in ids]
+    names_centroids_novice = [names_dict[i] for i in ids]
+    names_centroids_expert = [names_dict[i] for i in ids]
+
+    centroids_e_all = [v for v in centroids_e_all.values()]
+    centroids_i_all = [v for v in centroids_i_all.values()]
+    centroids_e_novice = [v for v in centroids_e_novice.values()]
+    centroids_i_novice = [v for v in centroids_i_novice.values()]
+    centroids_e_expert = [v for v in centroids_e_expert.values()]
+    centroids_i_expert = [v for v in centroids_i_expert.values()]
+
+    color = []
+    for name in names_centroids_expert:
+        if 'E_0' in name:
+            color.append(0)
+        elif 'M' in name:
+            color.append(1)
+        elif 'E' in name:
+            color.append(2)
+        elif 'N' in name:
+            color.append(3)
+
+    if seniority == 'all':
+        #TODO modify colors
+        return centroids_e_all, centroids_i_all, names_centroids_all, color
+
+    elif seniority == 'novice':
+        #TODO modify colors
+        return centroids_e_novice, centroids_i_novice, names_centroids_novice, color
+
+    else:
+        return centroids_e_expert, centroids_i_expert, names_centroids_expert, color
+
+
+def pairwise_centroids_plot_data(errors, ious, names, ids, experts, novices, names_dict):
     centroids_e_all = {id: [] for id in ids}
     centroids_i_all = {id: [] for id in ids}
     centroids_e_expert = {id: [] for id in ids}
@@ -126,6 +208,7 @@ def pairwise_centroids_plot(errors, ious, names, ids, experts, novices, names_di
     color_centroids_all = [0 for i in ids]
     color_centroids_novice = [1 for i in ids]
     color_centroids_expert = [2 for i in ids]
+
 
     centroids_e_all = [v for v in centroids_e_all.values()]
     centroids_i_all = [v for v in centroids_i_all.values()]

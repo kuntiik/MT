@@ -14,7 +14,6 @@ def exclude_row_col(matrix, row, col):
     return matrix
 
 
-
 class Comparison:
     def __init__(self):
         self.coco_data = None
@@ -124,17 +123,26 @@ class Comparison:
             e = iou_matrix.size(0) + iou_matrix.size(1)
             return ious, e, s
 
-    def pairwise_evaluate(self):
-        ious, errors, sizes = [], [], []
+    def pairwise_evaluate(self, fp_fn=False):
+        ious, errors, sizes, FP, FN = [], [], [], [], []
         for key in self.first.keys():
-            iou, e, s = self.assign_boxes_area(key, 0.0)
+            if fp_fn:
+                iou, fp, fn, s = self.assign_boxes_area(key, 0.0, return_fn_fp=True)
+                FP.append(fp)
+                FN.append(fn)
+            else:
+                iou, e, s = self.assign_boxes_area(key, 0.0)
+                errors.append(e)
+
             iou = [0] if len(iou) == 0 else iou
             ious.append(sum(iou) / len(iou))
-            errors.append(e)
             sizes.append(s)
         ious_scaled = [i * s for (i, s) in zip(ious, sizes)]
         iou_avg = sum(ious_scaled) / sum(sizes)
-        return float(iou_avg), sum(errors)
+        if fp_fn:
+            return float(iou_avg), sum(FP), sum(FN)
+        else:
+            return float(iou_avg), sum(errors)
 
     def pairwise_evaluate_per_img(self):
         ious, errors, sizes = [], [], []

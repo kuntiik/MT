@@ -17,5 +17,5 @@ defaults:
 train : True
 test : True
 
-seed : 42
+seed : 12
 name : null

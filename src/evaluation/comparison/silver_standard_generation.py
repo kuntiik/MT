@@ -2,7 +2,7 @@ import numpy as np
 import torch
 from torchvision.ops import box_iou
 from typing import List
-from .pairwise_comparison import Centroid
+from .core import Centroid
 from .utils import get_areas_negative, get_areas, merge_dataset_per_img
 
 
@@ -32,23 +32,23 @@ def generate_silver_dataset(data : dict, expert : int, expert_ids : List[int]) -
     :return: generated dataset in COCO format
     """
     ann_id = 0
-    data = {'annotations': [], 'images': [], 'categories': [{'id': 1, 'name': 'two_plus'}, {'id': 2, 'name': 'single'}]}
     merged_dataset = merge_dataset_per_img(data, expert_ids)
+    new_data = {'annotations': [], 'images': data['images'], 'categories': [{'id': 1, 'name': 'two_plus'}, {'id': 2, 'name': 'single'}]}
     for img in range(1, 101):
-        data['images'] = data['images']
 
-        bboxes = [merged_dataset[img][i] for i in range(4) if i != expert]
+        bboxes = [merged_dataset[img][i] for i in range(len(expert_ids)) if i != expert]
         multi_match, single_match = silver_dataset_image(bboxes)
         for mm in multi_match:
-            data['annotations'].append({'bbox': mm.tolist(), 'id': ann_id, 'category_id': 1, 'image_id': img})
+            new_data['annotations'].append({'bbox': mm.tolist(), 'id': ann_id, 'category_id': 1, 'image_id': img})
             ann_id += 1
 
         for sm in single_match:
-            data['annotations'].append({'bbox': sm.tolist(), 'id': ann_id, 'category_id': 2, 'image_id': img})
+            new_data['annotations'].append({'bbox': sm.tolist(), 'id': ann_id, 'category_id': 2, 'image_id': img})
             ann_id += 1
+    return new_data
 
 
-def silver_dataset_image(boxes: List[List[List[float, float, float, float]]]):
+def silver_dataset_image(boxes):
     empty_boxes_fix(boxes)
     all_boxes = np.concatenate(boxes, axis=0)
     n_boxes = all_boxes.shape[0]
@@ -72,14 +72,14 @@ def silver_dataset_image(boxes: List[List[List[float, float, float, float]]]):
         available_boxes = [ids for ids in sorted_indices if already_assigned[ids]]
         group_id = indices_dict[max_id][0]
         # TODO is hardoced
-        groups = [[], [], []]
-        groups_ids = [[], [], []]
+        groups = [[] for _ in range(len(boxes))]
+        groups_ids = [[] for _ in range(len(boxes))]
         for ab in available_boxes:
             groups[indices_dict[ab][0]].append(all_boxes[ab])
             groups_ids[indices_dict[ab][0]].append(ab)
         matched_boxes = []
         num_matched_boxes = 0
-        for i in range(3):
+        for i in range(len(boxes)):
             if i != group_id:
                 group_boxes = np.asarray(groups[i])
                 box_ids = np.asarray(groups_ids[i])
