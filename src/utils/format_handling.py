@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Union
 import json
+import numpy as np
 
 
 def load_dict(path: Union[Path, str, dict]):
@@ -11,8 +12,9 @@ def load_dict(path: Union[Path, str, dict]):
     else:
         return path
 
-def np_matrix_to_latex_table(table):
+def np_matrix_to_latex_table(table, decimals=2):
     str_table = []
+    table = np.round(table, decimals=decimals)
     for row in table:
         str_row = []
         for c in row:
@@ -21,4 +23,4 @@ def np_matrix_to_latex_table(table):
             else:
                 str_row.append(str(c))
         str_table.append(' & '.join(str_row))
-    return table
+    return str_table

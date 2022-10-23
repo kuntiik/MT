@@ -65,7 +65,7 @@ class Dataset:
         for i, image in enumerate(images):
             record = BaseRecord((ImageRecordComponent(),))
             record.set_record_id(i)
-            record.set_img(image)
+            record.set_img(image, original_img_size=True)
             records.append(record)
 
             record.add_component(ClassMapRecordComponent(task=tasks.detection))
