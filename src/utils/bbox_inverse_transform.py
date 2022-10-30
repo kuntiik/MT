@@ -98,10 +98,13 @@ def inverse_transform_record(
             ImageRecordComponent(),
         )
     )
-    ground_truth = copy.deepcopy(record.ground_truth)
-    inverted_bboxes = [inverse_transform_bbox(bbox, tfms, orig_size, size) for bbox in
-                       record.ground_truth.detection.bboxes]
-    ground_truth.detection.set_bboxes(inverted_bboxes)
+    if hasattr(record.ground_truth.detection, 'bboxes'):
+        ground_truth = copy.deepcopy(record.ground_truth)
+        inverted_bboxes = [inverse_transform_bbox(bbox, tfms, orig_size, size) for bbox in
+                           record.ground_truth.detection.bboxes]
+        ground_truth.detection.set_bboxes(inverted_bboxes)
+    else:
+        ground_truth = None
     return Prediction(pred=prediction, ground_truth=ground_truth)
 
 
