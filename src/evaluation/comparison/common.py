@@ -35,4 +35,4 @@ class Centroid:
     def match_criterion(self, array):
         a = self.inside_batch(array)
         b = self.other_centroids(array)
-        return np.logical_and(a, b)
+        return np.logical_or(a, b)
