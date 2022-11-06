@@ -5,9 +5,9 @@ import pytorch_lightning as pl
 from omegaconf import OmegaConf
 import torch
 
-import src.transforms.transforms_composer
-from src.datamodules.dental import DentalCaries
-from src.transforms import TransformsComposer
+import mt.transforms.transforms_composer
+from mt.datamodules.dental import DentalCaries
+from mt.transforms import TransformsComposer
 
 
 def test_training_cpu(cfg):

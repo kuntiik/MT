@@ -2,8 +2,8 @@ import hydra
 import numpy as np
 from albumentations import PadIfNeeded, Normalize, LongestMaxSize, HorizontalFlip
 
-from src.core import ClassMap, BaseRecord, ImageRecordComponent
-from src.transforms import TransformsComposer
+from mt.core import ClassMap, BaseRecord, ImageRecordComponent
+from mt.transforms import TransformsComposer
 
 
 def test_transforms_instantiation(cfg):

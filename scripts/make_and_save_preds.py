@@ -5,11 +5,11 @@ import pytorch_lightning as pl
 import torch
 from pathlib import Path
 import albumentations as A
-from src.transforms.albumentations_adapter import Adapter
-from src.utils.bbox_inverse_transform import predictions_to_fiftyone
+from mt.transforms.albumentations_adapter import Adapter
+from mt.utils.bbox_inverse_transform import predictions_to_fiftyone
 import json
-from src.utils.conver_to_coco import to_coco
-from src.evaluation.prediction_evaluation import PredictionEval
+from mt.utils.conver_to_coco import to_coco
+from mt.evaluation.prediction_evaluation import PredictionEval
 import argparse
 
 

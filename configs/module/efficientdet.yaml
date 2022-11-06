@@ -3,11 +3,11 @@ backbone : tf_d4
 img_size : [1024,896]
 
 model :
-  _target_ : src.modules.efficientdet.EfficientDetModule
+  _target_ : mt.modules.efficientdet.EfficientDetModule
   model :
-    _target_ : src.models.efficientdet.model
+    _target_ : mt.models.efficientdet.model
     backbone :
-      _target_ : src.models.efficientdet.backbones.${module.backbone}
+      _target_ : mt.models.efficientdet.backbones.${module.backbone}
       pretrained : 1
     num_classes : 2
     img_size : ${module.img_size}

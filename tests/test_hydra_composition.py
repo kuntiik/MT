@@ -2,7 +2,7 @@ import hydra
 import pytest
 from albumentations import Normalize, PadIfNeeded, LongestMaxSize, HorizontalFlip
 
-from src.transforms.transforms_composer import TransformsComposer
+from mt.transforms.transforms_composer import TransformsComposer
 
 
 def test_default_composition(cfg):

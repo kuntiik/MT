@@ -2,14 +2,14 @@ import cv2
 import numpy as np
 import pytest
 
-from src.core import BaseRecord, BBoxesRecordComponent, SizeRecordComponent, BBox, InstancesLabelsRecordComponent, \
+from mt.core import BaseRecord, BBoxesRecordComponent, SizeRecordComponent, BBox, InstancesLabelsRecordComponent, \
     ClassMap, ImageRecordComponent
-from src.transforms import Adapter
+from mt.transforms import Adapter
 import albumentations as A
 from PIL import Image
 
-from src.transforms.albumentations_utils import resize_and_pad
-from src.utils.bbox_inverse_transform import inverse_transform_bbox, inverse_transform_record
+from mt.transforms.albumentations_utils import resize_and_pad
+from mt.utils.bbox_inverse_transform import inverse_transform_bbox, inverse_transform_record
 
 
 @pytest.fixture()

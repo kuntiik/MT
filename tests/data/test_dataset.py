@@ -1,6 +1,6 @@
 import numpy as np
 
-from src.data.dataset import Dataset
+from mt.data.dataset import Dataset
 
 
 def test_dataset_from_images():

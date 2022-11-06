@@ -1,6 +1,6 @@
 import pytest
 
-from src.datamodules.dental.dental_caries import DentalCaries
+from mt.datamodules.dental.dental_caries import DentalCaries
 from hydra.utils import instantiate
 
 

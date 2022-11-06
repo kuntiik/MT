@@ -6,11 +6,11 @@ import numpy as np
 import torch
 from torchvision.transforms.functional import to_tensor
 
-from src.core import BBox, BaseRecord, ImageRecordComponent, InstancesLabelsRecordComponent, BBoxesRecordComponent, \
+from mt.core import BBox, BaseRecord, ImageRecordComponent, InstancesLabelsRecordComponent, BBoxesRecordComponent, \
     ClassMap
-from src.data.dataset import Dataset
-from src.models import efficientdet
-from src.utils.ice_utils import first
+from mt.data.dataset import Dataset
+from mt.models import efficientdet
+from mt.utils.ice_utils import first
 
 
 @pytest.fixture()

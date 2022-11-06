@@ -1,4 +1,4 @@
-_target_ : src.transforms.transforms_composer.TransformsComposer
+_target_ : mt.transforms.transforms_composer.TransformsComposer
 tfms_mode : ice
 cfg :
   image_size : ${module.img_size}

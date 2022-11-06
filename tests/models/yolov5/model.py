@@ -1,7 +1,7 @@
 import pytest
-from src.models.yolov5.backbones import *
-import src.models.yolov5
-from src.utils.path_utils import get_root_dir
+from mt.models.yolov5.backbones import *
+import mt.models.yolov5
+from mt.utils.path_utils import get_root_dir
 
 
 @pytest.mark.parametrize(
@@ -14,7 +14,7 @@ from src.utils.path_utils import get_root_dir
     # fmt: on
 )
 def test_yolo_model(backbone):
-    model = src.models.yolov5.model(
+    model = mt.models.yolov5.model(
         num_classes=5, img_size=320, backbone=backbone(pretrained=True)
     )
     weights_path = get_root_dir() / "yolo" / f"{backbone.model_name}.pt"
@@ -29,7 +29,7 @@ def test_yolo_model(backbone):
     [small, medium, large, extra_large],
 )
 def test_yolo_model_notpretrained(backbone):
-    model = src.models.yolov5.model(
+    model = mt.models.yolov5.model(
         num_classes=5, img_size=320, backbone=backbone(pretrained=False)
     )
 

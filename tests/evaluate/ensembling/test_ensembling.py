@@ -1,5 +1,5 @@
 import pytest
-from src.evaluation.boxes_fusion import weighted_boxes_fusion, nms
+from mt.evaluation.boxes_fusion import weighted_boxes_fusion, nms
 import numpy as np
 
 

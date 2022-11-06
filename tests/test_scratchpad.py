@@ -5,9 +5,9 @@ import numpy as np
 import numpy.testing
 import pytest
 
-from src.evaluation.ensembling import BoxesEnsemble
-from src.evaluation.prediction_evaluation import PredictionEval
-from src.utils.conver_to_coco import to_coco
+from mt.evaluation.ensembling import BoxesEnsemble
+from mt.evaluation.prediction_evaluation import PredictionEval
+from mt.utils.conver_to_coco import to_coco
 
 
 @pytest.fixture

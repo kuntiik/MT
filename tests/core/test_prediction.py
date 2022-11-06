@@ -4,10 +4,10 @@ import numpy as np
 import pytest
 import torch
 
-from src.core import BaseRecord, ScoresRecordComponent, ImageRecordComponent, InstancesLabelsRecordComponent, \
+from mt.core import BaseRecord, ScoresRecordComponent, ImageRecordComponent, InstancesLabelsRecordComponent, \
     BBoxesRecordComponent, ClassMap, BBox, Prediction
-from src.data.random_splitter import SingleSplitSplitter
-from src.datamodules.dental.dental_caries import DentalCariesParser
+from mt.data.random_splitter import SingleSplitSplitter
+from mt.datamodules.dental.dental_caries import DentalCariesParser
 
 @pytest.fixture()
 def pred():

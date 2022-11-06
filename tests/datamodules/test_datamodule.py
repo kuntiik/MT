@@ -1,14 +1,14 @@
 import pytest
 import torch
 
-from src.data.random_splitter import SingleSplitSplitter, RandomSplitter
-from src.data.record_collection import RecordCollection
-from src.datamodules.dental.dental_caries import DentalCariesParser, DentalCaries
+from mt.data.random_splitter import SingleSplitSplitter, RandomSplitter
+from mt.data.record_collection import RecordCollection
+from mt.datamodules.dental.dental_caries import DentalCariesParser, DentalCaries
 from pathlib import Path
 from hydra.utils import instantiate
 import hydra
 
-from src.transforms import TransformsComposer
+from mt.transforms import TransformsComposer
 import pytorch_lightning as pl
 
 

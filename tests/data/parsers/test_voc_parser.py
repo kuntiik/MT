@@ -1,6 +1,6 @@
-from src.core import BBox
-from src.data.parsers import VOCBBoxParser
-from src.data.random_splitter import SingleSplitSplitter
+from mt.core import BBox
+from mt.data.parsers import VOCBBoxParser
+from mt.data.random_splitter import SingleSplitSplitter
 
 
 def test_voc_annotation_parser(

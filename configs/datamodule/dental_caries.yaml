@@ -1,4 +1,4 @@
-_target_ : src.datamodules.dental.DentalCaries
+_target_ : mt.datamodules.dental.DentalCaries
 data_root : /datagrid/personal/kuntluka/dental_rtg
 model_type : ${module.model_type}
 ann_file : 'caries6.json'

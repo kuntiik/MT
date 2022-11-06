@@ -5,10 +5,10 @@ import optuna
 from pathlib import Path
 import json
 
-from src.evaluation.prediction_evaluation import PredictionEval
-from src.utils.conver_to_coco import to_coco
+from mt.evaluation.prediction_evaluation import PredictionEval
+from mt.utils.conver_to_coco import to_coco
 
-from src.evaluation.ensembling import BoxesEnsemble
+from mt.evaluation.ensembling import BoxesEnsemble
 
 class Objective:
     def __init__(self, boxes_ensemble, ensemble_method='wbf', weight_area=False):

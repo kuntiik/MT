@@ -1,6 +1,6 @@
 import hydra
-from src.modules import SegmentationModuleTorch
-from src.training_pipeline import train
+from mt.modules import SegmentationModuleTorch
+from mt.training_pipeline import train
 
 def test_model():
     with hydra.initialize(config_path='../configs'):

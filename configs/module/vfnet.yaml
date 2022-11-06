@@ -3,11 +3,11 @@ backbone : resnet50_fpn_1x
 img_size : [1024,896]
 
 model:
-  _target_ : src.modules.mmdet_adapter.MMDetModelAdapter
+  _target_ : mt.modules.mmdet_adapter.MMDetModelAdapter
   model :
-    _target_ : src.models.mmdet.vfnet.model
+    _target_ : mt.models.mmdet.vfnet.model
     backbone :
-      _target_ : src.models.mmdet.vfnet.backbones.${module.backbone}
+      _target_ : mt.models.mmdet.vfnet.backbones.${module.backbone}
       pretrained : 1
     num_classes : 2
   learning_rate : 1e-4

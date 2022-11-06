@@ -1,19 +1,19 @@
 # import gradio as gr
 # from hydra import compose, initialize
 # from omegaconf import OmegaConf
-# from src.transforms.albumentations_adapter import Adapter
-# from src.transforms.albumentations_utils import resize_and_pad
+# from mt.transforms.albumentations_adapter import Adapter
+# from mt.transforms.albumentations_utils import resize_and_pad
 # import hydra
 # import PIL
 # from PIL import Image
-# from src.data.dataset import Dataset
+# from mt.data.dataset import Dataset
 # import albumentations as A
 # import torch
 # import matplotlib.pyplot as plt
 # import numpy as np
-# from src.utils.bbox_inverse_transform import inverse_transform_record
+# from mt.utils.bbox_inverse_transform import inverse_transform_record
 #
-# import src.models.yolov5
+# import mt.models.yolov5
 #
 #
 #
@@ -29,8 +29,8 @@
 #
 # def predict_img(img, model, tfms):
 #     ds = Dataset.from_images(images=[img], tfm=tfms)
-#     dl = src.models.yolov5.infer_dl(ds)
-#     pred = src.models.yolov5.predict_from_dl(model.model, dl, detection_threshold=0.05, keep_images=True)
+#     dl = mt.models.yolov5.infer_dl(ds)
+#     pred = mt.models.yolov5.predict_from_dl(model.model, dl, detection_threshold=0.05, keep_images=True)
 #     pred = inverse_transform_record(pred[0])
 #     return pred
 #

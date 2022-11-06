@@ -1,0 +1,51 @@
+[tool.poetry]
+name = "mt"
+version = "0.1.0"
+description = "Dental caries detection from bitewing images"
+authors = ["Lukas Kunt <kunt.lukas.gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+#torch = {version = "1.11.0+cpu", source = "torch"}
+#torchvision = {version = "0.12.0+cpu", source = "torch"}
+torch = { url = "https://download.pytorch.org/whl/cpu/torch-1.11.0%2Bcpu-cp39-cp39-linux_x86_64.whl"}
+torchvision = { url = "https://download.pytorch.org/whl/cpu/torchvision-0.12.0%2Bcpu-cp39-cp39-linux_x86_64.whl" }
+mmcv-full = {url = "https://download.openmmlab.com/mmcv/dist/cpu/torch1.11.0/mmcv_full-1.6.0-cp39-cp39-manylinux1_x86_64.whl"}
+mmdet = "2.25.0"
+hydra-core = "^1.2.0"
+hydra-colorlog = "^1.2.0"
+pytorch-lightning = "^1.6.0"
+albumentations = "^1.3.0"
+effdet = "^0.3.0"
+loguru = "^0.6.0"
+yolov5-icevision = "^6.0.0"
+
+
+[tool.poetry.dev-dependencies]
+ipython = "^8.6.0"
+jupyter = "^1.0.0"
+pytest = "^7.2.0"
+
+
+#[[tool.poetry.source]]
+#name = "torch"
+#url = "https://download.pytorch.org/whl/cpu"
+#default = false
+#secondary = true
+
+
+[[tool.poetry.source]]
+name = "mmcv"
+url = "https://download.openmmlab.com/mmcv/dist/cpu"
+default = false
+secondary = true
+
+
+[[tool.poetry.source]]
+name = "github"
+url = "https://github.com/kuntiik/MT"
+#url = "git+ssh://git.github.com/kuntiik/MT"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -3,11 +3,11 @@ backbone : r50_16x2_50e_coco
 img_size : [1024,896]
 
 model:
-  _target_ : src.modules.mmdet_adapter.MMDetModelAdapter
+  _target_ : mt.modules.mmdet_adapter.MMDetModelAdapter
   model :
-    _target_ : src.models.mmdet.deformable_detr.model
+    _target_ : mt.models.mmdet.deformable_detr.model
     backbone :
-      _target_ : src.models.mmdet.deformable_detr.backbones.${module.backbone}
+      _target_ : mt.models.mmdet.deformable_detr.backbones.${module.backbone}
       pretrained : 1
     num_classes : 2
   learning_rate : 1e-4

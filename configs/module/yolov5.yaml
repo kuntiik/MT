@@ -5,14 +5,14 @@ pretrained : null
 #img_size : 960
 
 model:
-  _target_ : src.modules.yolov5.YoloV5Module
+  _target_ : mt.modules.yolov5.YoloV5Module
   model :
-    _target_ : src.models.yolov5.model
+    _target_ : mt.models.yolov5.model
     device:
       _target_ : torch.device
       device : 'cuda'
     backbone :
-      _target_ : src.models.yolov5.backbones.${module.backbone}
+      _target_ : mt.models.yolov5.backbones.${module.backbone}
       pretrained : 1
     num_classes : 2
 #    img_size : ${module.img_size}

@@ -2,8 +2,8 @@ import pytest
 import torch
 import torch.nn as nn
 
-from src.models import efficientdet
-from src.models.efficientdet.backbones import tf_lite0
+from mt.models import efficientdet
+from mt.models.efficientdet.backbones import tf_lite0
 
 
 @pytest.fixture()

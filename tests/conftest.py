@@ -5,14 +5,14 @@ import hydra
 from pathlib import Path
 import albumentations as A
 
-import src.transforms.albumentations_adapter
-from src.core import ClassMap
-from src.data.dataset import Dataset
-from src.data.parsers.pasacal_voc import VOCBBoxParser
-from src.data.random_splitter import RandomSplitter, SingleSplitSplitter
-from src.datamodules.dental import DentalCaries
-from src.core.record_components import *
-from src.datamodules.dental.dental_caries import DentalCariesParser
+import mt.transforms.albumentations_adapter
+from mt.core import ClassMap
+from mt.data.dataset import Dataset
+from mt.data.parsers.pasacal_voc import VOCBBoxParser
+from mt.data.random_splitter import RandomSplitter, SingleSplitSplitter
+from mt.datamodules.dental import DentalCaries
+from mt.core.record_components import *
+from mt.datamodules.dental.dental_caries import DentalCariesParser
 
 
 @pytest.fixture()
@@ -84,7 +84,7 @@ def fridge_ds(samples_source, fridge_class_map) -> Tuple[Dataset, Dataset]:
     data_splitter = RandomSplitter([0.5, 0.5], seed=42)
     train_records, valid_records = parser.parse(data_splitter)
 
-    tfms_ = src.transforms.albumentations_adapter.Adapter([A.Resize(IMG_SIZE, IMG_SIZE), A.Normalize()])
+    tfms_ = mt.transforms.albumentations_adapter.Adapter([A.Resize(IMG_SIZE, IMG_SIZE), A.Normalize()])
 
     train_ds = Dataset(train_records, tfms_)
     valid_ds = Dataset(valid_records, tfms_)

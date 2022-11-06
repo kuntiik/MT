@@ -1,7 +1,7 @@
 import pytest
 
-from src.models import efficientdet
-from src.models.efficientdet.backbones import *
+from mt.models import efficientdet
+from mt.models.efficientdet.backbones import *
 
 
 @pytest.mark.parametrize(

@@ -7,7 +7,7 @@ from omegaconf import DictConfig
 
 @hydra.main(config_path="configs/", config_name="train.yaml")
 def main(config: DictConfig):
-    from src.testing_pipeline import test
+    from mt.testing_pipeline import test
 
     # Train model
     return test(config)

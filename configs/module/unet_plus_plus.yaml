@@ -1,6 +1,6 @@
 img_size : [1088,864]
 model :
-  _target_ : src.modules.SegmentationModuleTorch
+  _target_ : mt.modules.SegmentationModuleTorch
   model:
     _target_ : segmentation_models_pytorch.UnetPlusPlus
     encoder_name : 'resnet50'

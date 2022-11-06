@@ -1,5 +1,5 @@
 import torch
-from src.evaluation.ensembling import *
+from mt.evaluation.ensembling import *
 from tqdm import tqdm
 import argparse
 
