@@ -101,7 +101,7 @@ class Objective:
 
 
 def main():
-    with hydra.initialize(config_path="configs"):
+    with hydra.initialize(config_path="mt/configs"):
         cfg = hydra.compose(
             config_name="config",
             overrides=["experiment=train_yolo", "callbacks=optuna_callbacks", "logger=null"],

@@ -17,14 +17,14 @@ from mt.datamodules.dental.dental_caries import DentalCariesParser
 
 @pytest.fixture()
 def cfg():
-    with hydra.initialize(config_path='../configs'):
+    with hydra.initialize(config_path='../mt/configs'):
         cfg = hydra.compose(config_name='train.yaml', overrides=['datamodule.num_workers=0'])
     return cfg
 
 
 @pytest.fixture()
 def cfg_rectangle():
-    with hydra.initialize(config_path='../configs'):
+    with hydra.initialize(config_path='../mt/configs'):
         cfg = hydra.compose(config_name='train.yaml',
                             overrides=['datamodule.num_workers=0', 'module.img_size=[512, 256]'])
     return cfg

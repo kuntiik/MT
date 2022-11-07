@@ -38,7 +38,7 @@ def test_training_cpu_multiple_epochs(cfg):
 
 @pytest.mark.parametrize('experiment', ['yolov5'])
 def test_training_pipeline_cpu(experiment):
-    with hydra.initialize(config_path='../configs'):
+    with hydra.initialize(config_path='../mt/configs'):
         experiment_string = f"experiment={experiment}"
         cfg = hydra.compose(config_name='train.yaml', overrides=['datamodule.num_workers=0', f"experiment={experiment}"])
 

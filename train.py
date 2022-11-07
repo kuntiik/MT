@@ -5,7 +5,7 @@ from omegaconf import DictConfig
 # dotenv.load_dotenv(override=True)
 
 
-@hydra.main(config_path="configs/", config_name="train.yaml")
+@hydra.main(config_path="mt/configs/", config_name="train.yaml")
 def main(config: DictConfig):
     from mt.training_pipeline import train
 

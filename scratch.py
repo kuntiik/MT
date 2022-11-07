@@ -5,7 +5,7 @@ import torch
 
 if __name__ == '__main__':
 
-    with hydra.initialize(config_path="configs"):
+    with hydra.initialize(config_path="mt/configs"):
         cfg = hydra.compose(
             config_name="train",
             overrides=['experiment=segmentation']

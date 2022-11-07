@@ -5,7 +5,7 @@ import torch
 import numpy as np
 
 
-with hydra.initialize(config_path='../configs'):
+with hydra.initialize(config_path='../mt/configs'):
     cfg = hydra.compose(config_name='train',
                         overrides=['experiment=unet', 'trainer.gpus=1', 'datamodule.num_workers=0', 'module.model.model.encoder_name=resnet50'])
 model = hydra.utils.instantiate(cfg.module.model)

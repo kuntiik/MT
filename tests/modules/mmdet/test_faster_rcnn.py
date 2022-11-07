@@ -12,7 +12,7 @@ from mt.datamodules.dental import DentalCaries
 
 @pytest.fixture()
 def cfg_faster_rcnn():
-    with hydra.initialize(config_path='../../../configs'):
+    with hydra.initialize(config_path='../../../mt/configs'):
         cfg = hydra.compose(config_name='train.yaml', overrides=['module=faster_rcnn'])
     return cfg
 

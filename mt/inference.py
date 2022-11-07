@@ -18,7 +18,7 @@ import mt.models.yolov5
 
 
 def load_model(ckpt):
-    with initialize(config_path="../configs"):
+    with initialize(config_path="configs"):
         cfg = compose(config_name='train',
                       overrides=['module=yolov5', 'module.backbone=small_p6', 'module.model.model.device.device=cpu'])
 

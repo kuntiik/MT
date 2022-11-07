@@ -8,7 +8,7 @@ from mt.transforms import TransformsComposer
 
 
 def test_training_pipeline_cpu():
-    with hydra.initialize(config_path='../../configs'):
+    with hydra.initialize(config_path='../../mt/configs'):
         cfg = hydra.compose(config_name='train.yaml', overrides=['datamodule.num_workers=0', "module=yolov5"])
 
     trainer: pl.Trainer = hydra.utils.instantiate(cfg.trainer, fast_dev_run=True, gpus=1, limit_predict_batches=2)

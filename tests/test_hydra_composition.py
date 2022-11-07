@@ -13,7 +13,7 @@ def test_default_composition(cfg):
 
 
 def test_overrides_composition():
-    with hydra.initialize(config_path='../configs'):
+    with hydra.initialize(config_path='../mt/configs'):
         cfg = hydra.compose(config_name='train', overrides=['experiment=yolov5', 'datamodule.batch_size=1'])
 
     assert 'experiment' in cfg

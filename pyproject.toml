@@ -1,9 +1,9 @@
 [tool.poetry]
 name = "mt"
-version = "0.1.2"
+version = "0.1.3"
 description = "Dental caries detection from bitewing images"
 authors = ["Lukas Kunt <kunt.lukas.gmail.com>"]
-include = ['configs']
+include = ['mt/configs']
 
 [tool.poetry.dependencies]
 python = "^3.9"
