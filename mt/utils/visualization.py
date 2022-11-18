@@ -1,4 +1,17 @@
 import matplotlib.pyplot as plt
+from PIL import Image
+
+
+def fig2img(fig):
+    """Convert a Matplotlib figure to a PIL Image and return it"""
+    import io
+    buf = io.BytesIO()
+    fig.tight_layout(pad=0)
+    fig.savefig(buf)
+    buf.seek(0)
+    img = Image.open(buf)
+    return img
+
 
 def set_matplotlib():
     """
@@ -18,6 +31,7 @@ def set_matplotlib():
         "ytick.labelsize": 9
     }
     plt.rcParams.update(tex_fonts)
+
 
 def set_fig_size(width_pt, fraction=1, subplots=(1, 1)):
     """
