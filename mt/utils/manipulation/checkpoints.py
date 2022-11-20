@@ -4,12 +4,13 @@ import shutil
 
 
 def get_backbone(b: str):
+    b = b if type(b) == str else str(b)
     if 'swin_t' in b:
         return 'swin_t'
     if 'resnet50' in b:
-        return 'resnset50'
+        return 'resnet50'
     if 'resnet101' in b:
-        return 'resnset101'
+        return 'resnet101'
     if 'small' in b:
         return 'small'
     if 'medium' in b:
@@ -31,6 +32,7 @@ def get_backbone(b: str):
 
 
 def get_architecture(a: str):
+    a = a if type(a) == str else str(a)
     if 'yolov5' in a:
         return 'yolov5'
     if 'faster_rcnn' in a:
@@ -111,3 +113,16 @@ def organize_ckpts(ckpt_folder: Path, target_folder):
             name = set_name(target / ckpt.name)
 
             shutil.copyfile(str(ckpt), name)
+
+def move_ckpts(ckpt_folder: Path, target_folder):
+    for ckpt in ckpt_folder.rglob("*.ckpt"):
+        arch = get_architecture(ckpt)
+        bb = get_backbone(ckpt)
+        ckpt_name = target_folder / arch / bb / ckpt.name
+        name = ckpt_name.stem
+        while ckpt_name.with_name(name).exists():
+            name = name.replace(ckpt_name.suffix, '') + '0' + ckpt_name.suffix
+        ckpt_name = ckpt_name.with_name(name)
+        shutil.copyfile(str(ckpt), ckpt_name)
+
+
