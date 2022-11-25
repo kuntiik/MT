@@ -6,6 +6,7 @@ import torch
 from PIL import Image
 from hydra import compose, initialize
 from torch import nn
+from pathlib import Path
 
 import mt.models.yolov5
 from mt.data.dataset import Dataset
@@ -42,11 +43,13 @@ class Inference:
         if ckpt is not None:
             self.model.load_state_dict(torch.load(ckpt, map_location='cpu')['state_dict'])
 
-    def predict(self, img: Image, nms_iou_threshold=0.4):
+    def predict(self, img: Image, nms_iou_threshold=0.4, device=None):
+        if device is None:
+            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.img = img
         ds = Dataset.from_images(images=[img], tfm=self.tfms)
         dl = mt.models.yolov5.infer_dl(ds)
-        pred = mt.models.yolov5.predict_from_dl(self.model.model, dl, detection_threshold=0.01, keep_images=True, nms_iou_threshold=nms_iou_threshold)
+        pred = mt.models.yolov5.predict_from_dl(self.model.model, dl, detection_threshold=0.01, keep_images=True, nms_iou_threshold=nms_iou_threshold, device=device)
         self.pred = inverse_transform_record(pred[0])
 
     def draw_img(self):
@@ -63,7 +66,7 @@ class Inference:
 
 
 if __name__ == '__main__':
-    ckpt = '/home/kuntik/0.750.ckpt'
+    ckpt = '/home/kuntik/dev/BitewingCariesDetection/yolo_small.ckpt'
     tfms = Adapter([*resize_and_pad((1024, 896)), A.Normalize(std=(0.4, 0.4, 0.4), mean=(0.4, 0.4, 0.4))])
     img = Image.open('../samples/dataset/images/1.png').convert('RGB')
     inference = Inference()
