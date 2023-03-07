@@ -2,11 +2,18 @@
 <module type="PYTHON_MODULE" version="4">
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$" />
-    <orderEntry type="jdk" jdkName="Poetry (MT)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Remote Python 3.8.12 (sftp://kuntluka@boruvka.felk.cvut.cz:22/home.stud/kuntluka/.conda/envs/mt/bin/python)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PackageRequirementsSettings">
     <option name="requirementsPath" value="" />
+  </component>
+  <component name="PyDocumentationSettings">
+    <option name="format" value="GOOGLE" />
+    <option name="myDocStringFormat" value="Google" />
+  </component>
+  <component name="ReSTService">
+    <option name="DOC_DIR" value="$MODULE_DIR$/../qi-lib/docs" />
   </component>
   <component name="TestRunnerService">
     <option name="PROJECT_TEST_RUNNER" value="py.test" />

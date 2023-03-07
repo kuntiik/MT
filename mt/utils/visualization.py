@@ -17,7 +17,7 @@ def set_matplotlib():
     """
     Sets matplotlib to default settings to look the same every time
     """
-    plt.style.use('seaborn')
+    # plt.style.use('seaborn')
     tex_fonts = {
         # Use LaTeX to write all text
         "text.usetex": True,

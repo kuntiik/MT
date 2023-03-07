@@ -37,3 +37,14 @@ def to_coco(pred_dict: Union[Path, str, dict], annotations: Union[Path, str, dic
             'annotations': all}
     stage_ids = {'type': 'id', 'train': train, 'val': val, 'test': test}
     return data, stage_ids
+
+def get_metadata(pred : dict):
+    metadata = {'train_files' : [], 'val_files' : [], 'test_files' : []}
+    for key, value in pred.items():
+        if value['stage'] == 'train':
+            metadata['train_files'].append(key)
+        if value['stage'] == 'val':
+            metadata['val_files'].append(key)
+        else:
+            metadata['test_files'].append(key)
+    return metadata
