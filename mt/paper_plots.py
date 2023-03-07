@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-__all__ = ["bboxes_width_height_histogram", "num_caries_histogram", "create_heatmap_from_pvalues", "pairwise_averaged_plot", "pairwise_plot"]
+__all__ = ["bboxes_width_height_histogram", "num_caries_histogram", "create_heatmap_from_pvalues", "pairwise_averaged_plot", "pairwise_plot", "pr_curve"]
 
 from typing import Union
 import seaborn as sns
@@ -163,10 +163,11 @@ def pr_curve(annotations_path: str|Path, data_names:list[str], data_paths: list[
         eval.load_data_coco_files(annotations_path, preds_coco, names)
         plot_data[name] = eval.precision_recall_score()
 
-    fig, ax = plt.subplots(figsize=set_fig_size(407))
-    for keys, values in plot_data.items():
-        ax.plot(values[0], values[1], label=keys)
+    line_styles = ['-', ':', '--', '-.']
+    fig, ax = plt.subplots(figsize=set_fig_size(fig_size))
+    for i, (keys, values) in enumerate(plot_data.items()):
+        ax.plot(values[0], values[1], label=keys, linestyle=line_styles[i % len(line_styles)])
         ax.legend()
-    fig.show()
+    return fig
 
 
