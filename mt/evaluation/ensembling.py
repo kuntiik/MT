@@ -95,7 +95,6 @@ class BoxesEnsemble:
     def evaluate_ensemble(self, weights, iou_thr, stage='val', ensemble_method='wbf', sigma=0.5, skip_box_thr=0.001):
         """Does the ensemble and returns AP@.iou_thr on the given stage. """
         assert stage in ['test', 'val', 'train']
-        files = stage + '_files'
         ensembled_boxes = self.ensemble(weights, iou_thr,skip_box_thr=skip_box_thr, stage=stage, ensemble_method=ensemble_method,
                                         sigma=sigma)
         preds_coco, names = to_coco(ensembled_boxes, str(self.annotations_path))
@@ -103,6 +102,7 @@ class BoxesEnsemble:
         self.pred_eval.load_predictions(preds_coco)
 
         # this is hot-patch for cross-validation return to this and rewrite it
+        # TODO this is probably causing invalid results - only test set is present during evaluation (is this the problem? solve it!)
         if stage == 'val':
             return self.pred_eval.map_query(stage=stage)
         else:

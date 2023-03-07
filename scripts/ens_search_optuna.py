@@ -68,11 +68,11 @@ def normalize_confidences(preds, ann_path):
 
 parser = argparse.ArgumentParser(description='Search best weights for ensembling, powered by optuna library')
 parser.add_argument('-p', '--path', help='path to the folder with json files (can be nested)', default='/home.stud/kuntluka/MT/data/predictions/default_predictions')
-parser.add_argument('-s', '--study', help='Name of the Optuna study', default='study_66')
+parser.add_argument('-s', '--study', help='Name of the Optuna study', default='study_81')
 parser.add_argument('-t', '--threshold', help='minimal test dataset performance ', type=float, default=0.3)
-parser.add_argument('-m', '--metadata', help='Path to the metadata file', type=str, default='../data/metadata/metadata4000.json')
+parser.add_argument('-m', '--metadata', help='Path to the metadata file', type=str, default='../data/metadata/seed42.json')
 parser.add_argument('-a', '--annotations', help='Path to the annotations file', type=str, default='/datagrid/personal/kuntluka/dental_rtg/caries6.json')
-parser.add_argument('-l', '--load',action='store_false' ,help='Start new study or load an existing study')
+parser.add_argument('-l', '--load',action='store_true' ,help='Start new study or load an existing study')
 
 if __name__ == '__main__':
     args = parser.parse_args()

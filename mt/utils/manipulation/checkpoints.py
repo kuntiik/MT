@@ -15,8 +15,22 @@ def get_backbone(b: str):
         return 'small'
     if 'medium' in b:
         return 'medium'
+    if 'extra_large' in b:
+        return 'extra_large'
     if 'large' in b:
         return 'large'
+    if 'tf_d0' in b:
+        return 'tf_d0'
+    if 'tf_d1' in b:
+        return 'tf_d1'
+    if 'tf_d2' in b:
+        return 'tf_d2'
+    if 'tf_d3' in b:
+        return 'tf_d3'
+    if 'tf_d4' in b:
+        return 'tf_d4'
+    if 'tf_d5' in b:
+        return 'tf_d5'
     if 'd0' in b:
         return 'd0'
     if 'd1' in b:
@@ -46,11 +60,15 @@ def get_architecture(a: str):
 def arch_bb(cfg):
     architecture_key = 'model/model/model/_target_'
     backbone_key = 'model/model/model/backbone/_target_'
-    if not architecture_key in cfg.keys() or not architecture_key in cfg.keys():
+    gn_key = 'model/group_norm'
+    if not architecture_key in cfg.keys() or not backbone_key in cfg.keys():
         return None
     else:
         architecture = get_architecture(cfg[architecture_key]['value'])
         backbone = get_backbone(cfg[backbone_key]['value'])
+        #check if group norm was used
+        if gn_key in cfg.keys() and cfg[gn_key]['value']:
+            backbone = 'gn_' + backbone
         return architecture, backbone
 
 
@@ -107,7 +125,10 @@ def organize_ckpts(ckpt_folder: Path, target_folder):
         if cfg is None or ckpt is None:
             continue
         else:
-            arch, bb = arch_bb(cfg)
+            ret_val = arch_bb(cfg)
+            if ret_val is None:
+                return
+            arch, bb = ret_val
             target = target_folder / arch / bb
             target.mkdir(parents=True, exist_ok=True)
             name = set_name(target / ckpt.name)
@@ -118,8 +139,9 @@ def move_ckpts(ckpt_folder: Path, target_folder):
     for ckpt in ckpt_folder.rglob("*.ckpt"):
         arch = get_architecture(ckpt)
         bb = get_backbone(ckpt)
+        (target_folder / arch / bb).mkdir(parents=True, exist_ok=True)
         ckpt_name = target_folder / arch / bb / ckpt.name
-        name = ckpt_name.stem
+        name = ckpt.name
         while ckpt_name.with_name(name).exists():
             name = name.replace(ckpt_name.suffix, '') + '0' + ckpt_name.suffix
         ckpt_name = ckpt_name.with_name(name)

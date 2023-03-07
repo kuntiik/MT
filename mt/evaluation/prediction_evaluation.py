@@ -43,10 +43,10 @@ class PredictionEval:
                 self.train_ids = train_val_names["train"]
                 self.val_ids = train_val_names["val"]
                 self.test_ids = train_val_names["test"]
-            elif train_val_names["type"] == "names":
-                self.train_ids = [self.img_name2id[name] for name in train_val_names["train"]]
-                self.val_ids = [self.img_name2id[name] for name in train_val_names["val"]]
-                self.tests_ids = [self.img_name2id[name] for name in train_val_names["test"]]
+            elif train_val_names["type"] == "file_name":
+                self.train_ids = [self.img_name2id[name] for name in train_val_names["train_files"]]
+                self.val_ids = [self.img_name2id[name] for name in train_val_names["val_files"]]
+                self.tests_ids = [self.img_name2id[name] for name in train_val_names["test_files"]]
 
     def load_predictions(self, predictions_coco: Union[Dict, List]) -> None:
         """Loads predictions of a model in the COCO format."""

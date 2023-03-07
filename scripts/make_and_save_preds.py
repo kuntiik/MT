@@ -11,6 +11,7 @@ import json
 from mt.utils.conver_to_coco import to_coco
 from mt.evaluation.prediction_evaluation import PredictionEval
 import argparse
+from mt.training_pipeline import  bn2gn
 
 
 def create_overrides_and_path(ckpt_name):
@@ -43,6 +44,9 @@ def create_overrides_and_path(ckpt_name):
     elif '/large/' in ckpt_name:
         overrides.append('module.backbone=large_p6')
         target_path = target_path / "large"
+    elif '/extra_large/' in ckpt_name:
+        overrides.append('module.backbone=extra_large_p6')
+        target_path = target_path / "extra_large"
 
     elif '/resnet101/' in ckpt_name:
         overrides.append('module.backbone=resnet101_fpn_1x')
@@ -56,34 +60,49 @@ def create_overrides_and_path(ckpt_name):
         overrides.append('module.backbone=swin_t_p4_w7_fpn_1x_coco')
         target_path = target_path / "swint"
 
-    elif '/d0/' in ckpt_name:
-        overrides.append('module.backbone=d0')
-        target_path = target_path / "d0"
-    elif '/d1/' in ckpt_name:
-        overrides.append('module.backbone=d1')
-        target_path = target_path / "d1"
-    elif '/d2/' in ckpt_name:
-        overrides.append('module.backbone=d2')
-        target_path = target_path / "d2"
-    elif '/d3/' in ckpt_name:
-        overrides.append('module.backbone=d3')
-        target_path = target_path / "d3"
-    elif '/d4/' in ckpt_name:
-        overrides.append('module.backbone=d4')
-        target_path = target_path / "d4"
-    elif '/tf_d0/' in ckpt_name:
+    elif 'tf_d0/' in ckpt_name:
         overrides.append('module.backbone=tf_d0')
         target_path = target_path / "tf_d0"
-    elif '/tf_d3/' in ckpt_name:
+    elif 'tf_d1/' in ckpt_name:
+        overrides.append('module.backbone=tf_d1')
+        target_path = target_path / "tf_d1"
+    elif 'tf_d2/' in ckpt_name:
+        overrides.append('module.backbone=tf_d2')
+        target_path = target_path / "tf_d2"
+    elif 'tf_d3/' in ckpt_name:
         overrides.append('module.backbone=tf_d3')
         target_path = target_path / "tf_d3"
+    elif 'tf_d4/' in ckpt_name:
+        overrides.append('module.backbone=tf_d4')
+        target_path = target_path / "tf_d4"
+    elif 'tf_d5/' in ckpt_name:
+        overrides.append('module.backbone=tf_d5')
+        target_path = target_path / "tf_d5"
 
-    return overrides, target_path
+    elif 'd0/' in ckpt_name:
+        overrides.append('module.backbone=d0')
+        target_path = target_path / "d0"
+    elif 'd1/' in ckpt_name:
+        overrides.append('module.backbone=d1')
+        target_path = target_path / "d1"
+    elif 'd2/' in ckpt_name:
+        overrides.append('module.backbone=d2')
+        target_path = target_path / "d2"
+    elif 'd3/' in ckpt_name:
+        overrides.append('module.backbone=d3')
+        target_path = target_path / "d3"
+    elif 'd4/' in ckpt_name:
+        overrides.append('module.backbone=d4')
+        target_path = target_path / "d4"
+
+    gn = True if '/gn_' in ckpt_name else False
+
+    return overrides, target_path, gn
 
 
-def predict_and_save(ckpt, ann_path, target_path, additional_overrides = []):
+def predict_and_save(ckpt, ann_path, target_path, additional_overrides = [], debug_run:bool = False, test_only:bool=False):
     path = Path(target_path)
-    overrides, name = create_overrides_and_path(str(ckpt))
+    overrides, name, gn = create_overrides_and_path(str(ckpt))
     overrides.append('logger.wandb.project=inference')
     overrides += additional_overrides
     with hydra.initialize(config_path="../mt/configs"):
@@ -92,7 +111,11 @@ def predict_and_save(ckpt, ann_path, target_path, additional_overrides = []):
             overrides=overrides
         )
     model = hydra.utils.instantiate(cfg.module.model)
+    if gn:
+        bn2gn(model)
     model.load_state_dict(torch.load(ckpt, map_location='cpu')['state_dict'])
+    if debug_run:
+        return
     logger = []
     if "logger" in cfg:
         for _, lg_conf in cfg.logger.items():
@@ -106,8 +129,11 @@ def predict_and_save(ckpt, ann_path, target_path, additional_overrides = []):
     v = Adapter([A.Resize(896, 1024), A.Normalize(mean=statistics["mean"], std=statistics["std"])])
     dm = hydra.utils.instantiate(cfg.datamodule, train_transforms=v, val_transforms=v)
     dm.setup()
+    if test_only:
+        trainer.test(model, dm)
+        return
 
-    test_data = val_data = train_data = {}
+    test_data, val_data, train_data = {}, {}, {}
     if len(dm.predict_dataloader('test')) > 0:
         test_prediction = trainer.predict(model, dm.predict_dataloader('test'))
         test_data = predictions_to_fiftyone(test_prediction, stage='test')
@@ -130,7 +156,10 @@ def predict_and_save(ckpt, ann_path, target_path, additional_overrides = []):
     map50 = round(pred_eval.map_query(stage='test'), 3)
     dir_name = path / name
     dir_name.mkdir(parents=True, exist_ok=True)
-    save_name = dir_name / (str(map50) + '.json')
+    ext = ''
+    while (dir_name / (str(map50) + ext + '.json')).exists():
+        ext = ext + '0'
+    save_name = dir_name / (str(map50) + ext + '.json')
 
     with open(save_name, 'w') as f:
         json.dump(data, f)
@@ -143,6 +172,8 @@ parser.add_argument('-t', '--target', default='/home.stud/kuntluka/MT/data/predi
 parser.add_argument('-a', '--annotations', default='/datagrid/personal/kuntluka/dental_rtg/caries6.json', help='string with path to annotation file in json format')
 parser.add_argument('-w', '--weights', default='/datagrid/personal/kuntluka/weights6',  help='string with path to folder with weights to make predictions with')
 parser.add_argument('-o', '--overrides', default=None, type=str,  help='Additional overrides for hydra composition')
+parser.add_argument('-d', '--debug', action='store_true')
+parser.add_argument( '--test_only', action='store_true')
 
 
 if __name__ == '__main__':
@@ -153,5 +184,5 @@ if __name__ == '__main__':
     overrides = [args.overrides] if args.overrides is not None else []
     for ckpt in ckpt_path:
         print(str(ckpt))
-        predict_and_save(ckpt, args.annotations, args.target, additional_overrides=overrides)
+        predict_and_save(ckpt, args.annotations, args.target, additional_overrides=overrides, debug_run=args.debug, test_only=args.test_only)
 

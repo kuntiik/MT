@@ -3,11 +3,15 @@ from .core import Comparison
 from itertools import combinations
 from typing import List
 import numpy as np
+from pathlib import Path
 
 
-def generate_data(coco_data_path: str, ids: List[int], data_json_dict: dict, evaluate_ids=None, per_img=False):
+def generate_data(coco_data_path: str, ids: List[int], data_json_dict: dict, evaluate_ids=None, per_img=False,
+                  iou_threshold: float = 0.0):
     names, errors, ious = [], [], []
     if evaluate_ids is None: evaluate_ids = ids
+    if type(coco_data_path) == Path:
+        coco_data_path = str(coco_data_path)
 
     comparison = Comparison()
     comparison.parse_coco_data(coco_data_path)
@@ -24,18 +28,19 @@ def generate_data(coco_data_path: str, ids: List[int], data_json_dict: dict, eva
             else:
                 comparison.load_json_data(data_json_dict[id2], False)
         if per_img:
-            iou, e = comparison.pairwise_evaluate_per_img()
+            iou, e = comparison.pairwise_evaluate_per_img(iou_threshold=iou_threshold)
         else:
-            iou, e = comparison.pairwise_evaluate()
+            iou, e = comparison.pairwise_evaluate(iou_threshold=iou_threshold)
         # e = fp + fn
         names.append(str(c))
         ious.append(iou)
         errors.append(e)
     return names, ious, errors
 
-def generate_pairwise_table(names, ious, errors, ids, id_dict = None):
+
+def generate_pairwise_table(names, ious, errors, ids, id_dict=None):
     results = np.zeros((len(ids), len(ids)))
-    id_dict = {id : index for index, id in enumerate(ids)} if id_dict is None else id_dict
+    id_dict = {id: index for index, id in enumerate(ids)} if id_dict is None else id_dict
     avg_iou = [0 for _ in ids]
     avg_e = [0 for _ in ids]
     for e, i, n in zip(errors, ious, names):
@@ -53,20 +58,22 @@ def generate_pairwise_table(names, ious, errors, ids, id_dict = None):
     for i in range(len(ids)):
         avg_iou[i] /= (len(ids) - 1)
         avg_e[i] /= (len(ids) - 1)
-    results = np.hstack([results, np.expand_dims(np.round(avg_iou,2), 1)])
+    results = np.hstack([results, np.expand_dims(np.round(avg_iou, 2), 1)])
     results = np.vstack([results, np.hstack([np.asarray(avg_e), [0]])])
     # results = np.hstack([results, np.expand_dims(np.asarray(avg_e), 1)])
     # results = np.vstack([results, np.hstack([np.round(avg_iou,2), [0]])])
     return results
 
+
 def generate_prob_table(names, ious, errors, ids):
     results = np.zeros((len(ids), len(ids)))
-    id_dict = {id : index for index, id in enumerate(ids)}
+    id_dict = {id: index for index, id in enumerate(ids)}
     for e, i, n in zip(errors, ious, names):
         i1, i2 = eval(n)
 
         results[id_dict[i1], id_dict[i2]] = round(i, 2)
-        results[ id_dict[i2], id_dict[i1]] = e
+        results[id_dict[i2], id_dict[i1]] = e
+
 
 def bootstrap_realization(iou1, iou2, e1, e2):
     num_e = 0
@@ -148,11 +155,11 @@ def pairwise_centroids_plot_data_per_seniority(seniority, errors, ious, names, i
             color.append(3)
 
     if seniority == 'all':
-        #TODO modify colors
+        # TODO modify colors
         return centroids_e_all, centroids_i_all, names_centroids_all, color
 
     elif seniority == 'novice':
-        #TODO modify colors
+        # TODO modify colors
         return centroids_e_novice, centroids_i_novice, names_centroids_novice, color
 
     else:
@@ -208,7 +215,6 @@ def pairwise_centroids_plot_data(errors, ious, names, ids, experts, novices, nam
     color_centroids_all = [0 for i in ids]
     color_centroids_novice = [1 for i in ids]
     color_centroids_expert = [2 for i in ids]
-
 
     centroids_e_all = [v for v in centroids_e_all.values()]
     centroids_i_all = [v for v in centroids_i_all.values()]
