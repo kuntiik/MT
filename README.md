@@ -19,6 +19,11 @@ This project relies on many external dependencies. The main dependencies are as 
 - conda env create -f environment.yaml
 - conda activate detection
 ```
+The other option is to use poetry. You simply do the following
+```{bash}
+poetry install
+```
+
 ## How to run
 - You can train a model with the default setting by `python train.py`. 
 - To test a model specify the path to model weights either by command line or in module.yaml file and run `python test.py` this will run tests on the test dataset and report the metrics defined by the user (by default mean average precision)
