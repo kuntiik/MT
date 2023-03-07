@@ -4,6 +4,8 @@ from itertools import combinations
 from typing import List
 import numpy as np
 from pathlib import Path
+import json
+from scipy.stats import wilcoxon
 
 
 def generate_data(coco_data_path: str, ids: List[int], data_json_dict: dict, evaluate_ids=None, per_img=False,
@@ -234,3 +236,68 @@ def pairwise_centroids_plot_data(errors, ious, names, ids, experts, novices, nam
     c_merged = color_centroids_all + color_centroids_novice + color_centroids_expert
 
     return e_merged, i_merged, n_merged, c_merged
+
+def pairwise_signed_pvalues(test_ds_path, model_path):
+
+    with open(model_path, 'r') as f:
+        model = json.load(f)
+
+    ids = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+    evaluate_ids = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+    experts = [1, 2, 3, 4, 5]
+    novices = [6, 7, 8]
+    names_dict = {1: "$E_0$", 2: "$E_1$", 3: "$E_2$", 4: "$E_3$", 5: "$E_4$", 6: "$N_1$", 7: "$N_2$", 8: "$N_3$",
+                  0: "$M$"}
+    data_dict = {0: model}
+    names, ious, errors = generate_data(str(test_ds_path), ids, data_dict, evaluate_ids, iou_threshold=0.0,
+                                        per_img=True)
+    names = [eval(n) for n in names]
+    errors = np.array(errors)
+    ious = np.array(ious)
+
+    errors_pvals = np.ones((9, 9))
+    ious_pvals = np.ones((9, 9))
+
+    for k in range(9):
+        for l in range(9):
+            if k == l:
+                continue
+            experts_to_use = [e for e in experts if (e != k and e != l)]
+
+            errors_per_image = np.zeros((100, ))
+            ious_per_image = np.zeros((100, ))
+            for e in experts_to_use:
+                pair1 = (k, e) if k < e else (e, k)
+                pair2 = (l, e) if l < e else (e, l)
+                pair1_idx = names.index(pair1)
+                pair2_idx = names.index(pair2)
+
+                errors_per_image += errors[pair1_idx] - errors[pair2_idx]
+                ious_per_image -= ious[pair1_idx] - ious[pair2_idx]
+                # errors_per_image[k, l] += errors[pair1_idx] - errors[pair2_idx]
+                # ious[k, l] -= ious[pair1_idx] - ious[pair2_idx]
+
+            errors_pvals[k, l] = wilcoxon(errors_per_image).pvalue
+            ious_pvals[k, l] = wilcoxon(ious_per_image).pvalue
+
+    names, ious, errors = generate_data(str(test_ds_path), ids, data_dict, evaluate_ids, iou_threshold=0.0,
+                                        per_img=False)
+    e_merged, i_merged, n_merged, c_merged = pairwise_centroids_plot_data_per_seniority('experts', errors, ious,
+                                                                                        names, ids, experts, novices,
+                                                                                        names_dict)
+
+    errors_signs = np.ones((9, 9))
+    ious_signs = np.ones((9, 9))
+
+    for k in range(9):
+        for l in range(9):
+            if k == l:
+                continue
+            if e_merged[k] > e_merged[l]:
+                errors_signs[k, l] = -1
+
+            if i_merged[k] < i_merged[l]:
+                ious_signs[k, l] = -1
+    signed_iou_pvals = np.multiply(1 - ious_pvals, ious_signs)
+    signed_error_pvals = np.multiply(1 - errors_pvals, errors_signs)
+    return signed_iou_pvals, signed_error_pvals

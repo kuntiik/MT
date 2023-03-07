@@ -170,4 +170,3 @@ def pr_curve(annotations_path: str|Path, data_names:list[str], data_paths: list[
         ax.legend()
     return fig
 
-
