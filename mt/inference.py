@@ -49,7 +49,7 @@ class Inference:
         self.img = img
         ds = Dataset.from_images(images=[img], tfm=self.tfms)
         dl = mt.models.yolov5.infer_dl(ds)
-        pred = mt.models.yolov5.predict_from_dl(self.model.model, dl, detection_threshold=0.01, keep_images=True, nms_iou_threshold=nms_iou_threshold, device=device)
+        pred = mt.models.yolov5.predict_from_dl(self.model.model, dl, detection_threshold=0.01, keep_images=True, nms_iou_threshold=nms_iou_threshold)
         self.pred = inverse_transform_record(pred[0])
 
     def draw_img(self):
