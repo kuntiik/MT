@@ -10,13 +10,15 @@ python = "^3.9"
 #torch = {version = "1.11.0", source = "torch"}
 #torchvision = {version = "0.12.0", source = "torch"}
 #cudatoolkit = {version="11.3", source=torch}
-torch = { url = "https://download.pytorch.org/whl/cu113/torch-1.11.0%2Bcu113-cp39-cp39-linux_x86_64.whl"}
-torchvision = { url = "https://download.pytorch.org/whl/cu113/torchvision-0.12.0%2Bcu113-cp39-cp39-linux_x86_64.whl" }
+torch = "1.11.0"
+torchvision = "0.12.0"
+#torch = { url = "https://download.pytorch.org/whl/cu113/torch-1.11.0%2Bcu113-cp39-cp39-linux_x86_64.whl"}
+#torchvision = { url = "https://download.pytorch.org/whl/cu113/torchvision-0.12.0%2Bcu113-cp39-cp39-linux_x86_64.whl" }
 #mmcv-full = {url = "https://download.openmmlab.com/mmcv/dist/cpu/torch1.11.0/mmcv_full-1.6.0-cp39-cp39-manylinux1_x86_64.whl"}
 #mmcv-full = {url = "https://download.openmmlab.com/mmcv/dist/cu113/torch1.11/mmcv_full-1.6.0-cp39-cp39-manylinux1_x86_64.whl"}
 #mmcv-full = {version = "1.6.0", source = "mmcv"}
-mmcv-full = {url = "https://download.openmmlab.com/mmcv/dist/cu113/torch1.11.0/mmcv_full-1.6.0-cp39-cp39-manylinux1_x86_64.whl"}
-mmdet = "2.25.0"
+#mmcv-full = {url = "https://download.openmmlab.com/mmcv/dist/cu113/torch1.11.0/mmcv_full-1.6.0-cp39-cp39-manylinux1_x86_64.whl"}
+#mmdet = "2.25.0"
 hydra-core = "^1.2.0"
 hydra-colorlog = "^1.2.0"
 pytorch-lightning = "^1.6.0"
@@ -24,7 +26,20 @@ albumentations = "^1.3.0"
 effdet = "^0.3.0"
 loguru = "^0.6.0"
 yolov5-icevision = "^6.0.0"
+poethepoet = "*"
 
+
+[tool.poe.tasks]
+install-ltt = "python3 -m pip install light-the-torch"
+run-ltt = "python3 -m light_the_torch install --upgrade torch==1.12.1 torchvision==.1.12.1"
+ltt-cu113 = "python3 -m light_the_torch install --pytorch-computation-backend=cu113 torch==1.12.1+cu113 torchvision==0.13.1+cu113"
+force_cuda113 = ["install-ltt", "ltt-cu113"]
+
+# open-mmlab
+install-mim = "python3 -m pip install openmim"
+install-mmcv = "python3 -m mim install mmcv-full==1.6.0"
+install-mmdet = "python3 -m mim install mmdet==2.25.0"
+install-mmlab-all = ["install-mim", "install-mmcv", "install-mmdet"]
 
 [tool.poetry.dev-dependencies]
 ipython = "^8.6.0"

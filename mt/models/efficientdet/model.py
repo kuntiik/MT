@@ -4,9 +4,13 @@ from types import MethodType
 from typing import List
 
 import torch
-from effdet import get_efficientdet_config, unwrap_bench
-from effdet import create_model_from_config
 from torch import nn
+
+from mt.utils.soft_imports import SoftImport
+
+with SoftImport() as si:
+    from effdet import get_efficientdet_config, unwrap_bench
+    from effdet import create_model_from_config
 
 from mt.models.efficientdet.backbones import *
 from mt.utils import check_all_model_params_in_groups2

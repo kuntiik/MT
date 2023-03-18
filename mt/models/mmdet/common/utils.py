@@ -8,9 +8,11 @@ __all__ = [
 from pathlib import Path
 from types import MethodType
 from typing import Optional, Union
+from mt.utils.soft_imports import SoftImport
 
-from mmdet.models import build_detector
-from mmcv.runner import load_checkpoint
+with SoftImport() as si:
+    from mmdet.models import build_detector
+    from mmcv.runner import load_checkpoint
 
 # from mt.models.mmdet.common.backbone_config import MMDetBackboneConfig, create_model_config, param_groups
 # import mt.models.mmdet.common.backbone_config
