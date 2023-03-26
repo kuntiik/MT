@@ -4,7 +4,9 @@ import pytorch_lightning.callbacks
 import torch
 from torch.optim import AdamW
 from torchmetrics import MaxMetric
-from yolov5.utils.loss import ComputeLoss
+from mt.utils.soft_imports import SoftImport
+with SoftImport() as si:
+    from yolov5.utils.loss import ComputeLoss
 import pytorch_lightning as pl
 import torch.nn as nn
 import mt.models.yolov5 as yolov5
@@ -13,7 +15,6 @@ import mt.models.yolov5 as yolov5
 from mt.core.convertions import preds2dicts
 from mt.metrics.coco_metric import COCOMetric, COCOMetricType
 
-pytorch_lightning.callbacks.ModelCheckpoint
 
 class YoloV5Module(pl.LightningModule):
     def __init__(self, model: nn.Module, learning_rate, weight_decay):

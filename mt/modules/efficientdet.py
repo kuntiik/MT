@@ -8,7 +8,9 @@ import torch
 
 import mt.models.efficientdet as efficientdet
 from torch.optim import Adam, SGD, AdamW
-from effdet import DetBenchPredict, unwrap_bench
+from mt.utils.soft_imports import SoftImport
+with SoftImport() as si:
+    from effdet import DetBenchPredict, unwrap_bench
 
 from mt.core.convertions import preds2dicts
 from mt.metrics.coco_metric import COCOMetric, COCOMetricType

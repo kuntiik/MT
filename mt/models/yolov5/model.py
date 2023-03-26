@@ -4,14 +4,16 @@ import sys
 from pathlib import Path
 from types import MethodType
 from typing import Optional, List
+from mt.utils.soft_imports import SoftImport
 
 import torch
 import yaml
-import yolov5
-from yolov5.models.yolo import Model
-from yolov5.utils.downloads import attempt_download
-from yolov5.utils.torch_utils import intersect_dicts
-from yolov5.utils.general import check_img_size
+with SoftImport() as si:
+    import yolov5
+    from yolov5.models.yolo import Model
+    from yolov5.utils.downloads import attempt_download
+    from yolov5.utils.torch_utils import intersect_dicts
+    from yolov5.utils.general import check_img_size
 
 import torch.nn as nn
 from mt.models.yolov5.backbones import YoloV5BackboneConfig
