@@ -7,3 +7,4 @@ pytorch-lightning==1.6.*
 pycocotools==2.0.6
 ipython
 jupyter
+seaborn>=0.12.0
