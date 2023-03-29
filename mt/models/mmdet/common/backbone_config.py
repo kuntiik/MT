@@ -8,13 +8,15 @@ __all__ = [
 
 from pathlib import Path
 from typing import Optional, Union
+from mt.utils.soft_imports import SoftImport
 
-from mmdet.models.detectors import *
-from mmcv import Config
-from mmdet.models.backbones.ssd_vgg import SSDVGG
-from mmdet.models.backbones.csp_darknet import CSPDarknet
-from mmdet.models.backbones.swin import SwinTransformer
-from mmdet.models.backbones.hourglass import HourglassNet
+with SoftImport() as si:
+    from mmdet.models.detectors import *
+    from mmcv import Config
+    from mmdet.models.backbones.ssd_vgg import SSDVGG
+    from mmdet.models.backbones.csp_darknet import CSPDarknet
+    from mmdet.models.backbones.swin import SwinTransformer
+    from mmdet.models.backbones.hourglass import HourglassNet
 
 # from mt.models.mmdet.common.download_config import download_mmdet_configs
 import mt.models.mmdet.common.download_config

@@ -55,7 +55,14 @@ def num_caries_histogram(annotations: str| Path, fig_size:int = 407) -> plt.Figu
 
 def create_heatmap_from_pvalues(p_values: np.ndarray, names:list[str], fig_size:int=407) -> plt.Figure:
     fig, ax = plt.subplots(figsize=set_fig_size(fig_size))
-    sns.heatmap(p_values, cmap=sns.diverging_palette(10, 130, as_cmap=True), xticklabels=names, yticklabels=names, ax=ax)
+    import matplotlib.cm as mpl_cm
+    cmap_cont = sns.diverging_palette(20, 120, as_cmap=True,)
+    # cpal = 'PuOr_r'
+    # cmap_cont = mpl_cm.get_cmap(cpal)
+    cmap_cont.set_over(color='green')
+    cmap_cont.set_under(color='red')
+    # cmap.set_over()
+    sns.heatmap(p_values, cmap=cmap_cont, xticklabels=names, yticklabels=names, ax=ax, vmin=-0.95, vmax=0.95, cbar_kws={'extend':'both', 'ticks' : [-0.95,-0.75, -0.5, -0.25, 0, 0.25, 0.5, 0.75, 0.95]})
     return fig
 
 

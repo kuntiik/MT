@@ -2,7 +2,10 @@ __all__ = ['predict_from_dl', 'convert_raw_predictions']
 
 import torch
 from typing import Sequence, List
-from yolov5.utils.general import non_max_suppression
+from mt.utils.soft_imports import SoftImport
+
+with SoftImport() as si:
+    from yolov5.utils.general import non_max_suppression
 
 from mt.core import BaseRecord, Prediction, ScoresRecordComponent, ImageRecordComponent, \
     InstancesLabelsRecordComponent, BBoxesRecordComponent, BBox
