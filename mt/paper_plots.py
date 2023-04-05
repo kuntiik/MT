@@ -28,12 +28,13 @@ def bboxes_width_height_histogram(annotations: str| Path, max_size:int=150, n_bi
         height.append(h)
 
     fig, ax = plt.subplots(1,1, figsize=set_fig_size(fig_size))
-    ax.hist(width, bins, alpha=0.8, label='width')
-    ax.hist(height, bins, alpha=0.5, label='height')
+    ax.hist(width, bins, alpha=0.8, label='width',histtype='step',linewidth=3)
+    ax.hist(height, bins, alpha=0.5, label='height',histtype='step',linewidth=1)
     ax.set_xlabel('size [pixels]')
-    ax.set_ylabel('amount of bounding boxes')
+    ax.set_ylabel('number of bounding boxes')
     ax.legend()
     ax.set_xlim([0,max_size])
+    fig.savefig('images/dataset_histogram2.pdf')
     return fig
 
 
@@ -47,10 +48,11 @@ def num_caries_histogram(annotations: str| Path, fig_size:int = 407) -> plt.Figu
 
     fig, ax = plt.subplots(1, 1, figsize=set_fig_size(fig_size))
     bins = np.linspace(0, 10, 11)
-    plt.hist(images, bins)
-    ax.set_xlabel('number of dental caries')
-    ax.set_ylabel('amount of images in the dataset')
+    plt.hist(images, bins,histtype='step',linewidth=2)
+    ax.set_xlabel('number of dental caries per image')
+    ax.set_ylabel('number of images')
     ax.set_xlim([0, 10])
+    fig.savefig('images/caries_histogram2.pdf')
     return fig
 
 def create_heatmap_from_pvalues(p_values: np.ndarray, names:list[str], fig_size:int=407) -> plt.Figure:
