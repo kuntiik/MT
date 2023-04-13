@@ -48,10 +48,11 @@ def num_caries_histogram(annotations: str| Path, fig_size:int = 407) -> plt.Figu
 
     fig, ax = plt.subplots(1, 1, figsize=set_fig_size(fig_size))
     bins = np.linspace(0, 10, 11)
-    plt.hist(images, bins,histtype='step',linewidth=2)
+    plt.hist(images, bins,histtype='step',align='left',linewidth=2)
     ax.set_xlabel('number of dental caries per image')
     ax.set_ylabel('number of images')
     ax.set_xlim([0, 10])
+    ax.set_xticks(list(range(0,10)))
     fig.savefig('images/caries_histogram2.pdf')
     return fig
 
