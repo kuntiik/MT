@@ -129,6 +129,18 @@ def pairwise_plot(annotations_path, model_data_path, fig_size: int = 407) -> plt
     names_text = [names_dict[eval(n)[0]] + '/' + names_dict[eval(n)[1]] for n in names]
     names_text, ious, errors = np.array(names_text), np.array(ious), np.array(errors)
     colors = []
+    # offsets for point labels to avoid overlaps, in units of error and IoU
+    hints={"$E_1$/$N_2$": (-2,0.015),
+           "$E_0$/$E_1$": (-3,-0.02),
+           "$N_1$/$N_2$": (-2,-0.02),
+           "$E_2$/$N_1$": (-4,-0.02),
+           "$E_4$/$N_2$": (-3,-0.02),
+           "$M$/$N_2$": (-4,0.01),
+           "$M$/$N_1$": (2,-0.005),
+           "$E_0$/$N_2$": (-2,-0.02),
+           "$E_0$/$E_3$": (-2,-0.02),
+}
+    
 
     for n in names_text:
         if 'M$/$E_0' in n:
@@ -153,10 +165,16 @@ def pairwise_plot(annotations_path, model_data_path, fig_size: int = 407) -> plt
         ax.scatter(x=em, y=im, c=cmap[idx], marker=markers[idx], label=labels[idx])
 
         for e, i, n in zip(em, im, nm):
-            ax.annotate(n, xy=(e + 2, i))
+            #print(f"annotating '{n}'")
+            try:
+               offsets=hints[n]
+               #print(f"    hint for offset found: {offsets}")
+            except KeyError:
+               offsets=(2,0)
+            ax.annotate(n, xy=(e + offsets[0], i+offsets[1]))
     ax.set_xlabel('Number of errors')
     ax.set_ylabel('Average IOU')
-    ax.legend(title='Model compared with:', loc='lower right')
+    ax.legend(title='Automatic method compared with:', loc='lower right')
     return fig
 
 def pr_curve(annotations_path: str|Path, data_names:list[str], data_paths: list[str|Path], fig_size:int = 407) -> plt.Figure:
